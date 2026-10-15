@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="bn" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ট্যাক্সহিসাব প্রো | আয়কর ক্যালকুলেটর (AY 2026–2027)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Hind Siliguri & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Hind Siliguri"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Plus Jakarta Sans"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+    }
+    .num-font {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+    /* Print Styles for Official PDF Summary */
+    @media print {
+      body * { visibility: hidden; }
+      #printableReport, #printableReport * { visibility: visible; }
+      #printableReport {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen selection:bg-brand-500 selection:text-white transition-colors duration-200">
+
+  <!-- Ambient Background Glow -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10 no-print">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-400/15 dark:bg-brand-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-teal-400/15 dark:bg-teal-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800/80 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-teal-800 flex items-center justify-center text-white shadow-lg shadow-brand-600/20">
+          <i data-lucide="landmark" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-brand-800 to-teal-600 dark:from-brand-300 dark:to-teal-200 bg-clip-text text-transparent">ট্যাক্সহিসাব</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-300 border border-brand-200 dark:border-brand-700/50">PRO</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Smart Bangladesh NBR Income Tax Engine</p>
+        </div>
+      </div>
+
+      <!-- Right Action Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button onclick="loadDemoData()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 transition">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>ডেমো ডেটা টেস্ট</span>
+        </button>
+
+        <button onclick="resetCalculator()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition" title="রিসেট করুন">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span class="hidden md:inline">রিসেট</span>
+        </button>
+
+        <button onclick="openReportModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-600/20 transition">
+          <i data-lucide="file-down" class="w-4 h-4"></i>
+          <span>রিটার্ন সামারি / PDF</span>
+        </button>
+
+        <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" aria-label="Toggle Dark Mode">
+          <i data-lucide="moon" id="themeIcon" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 no-print">
+    
+    <!-- Hero Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800/70 text-brand-700 dark:text-brand-300 text-xs font-semibold mb-3">
+          <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+          <span>জাতীয় রাজস্ব বোর্ড (NBR) আয়কর আইন অনুযায়ী প্রস্তুত</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">আয়কর ক্যালকুলেটর</h1>
+        <p class="mt-1.5 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl">
+          ধাপে ধাপে আপনার প্রোফাইল, বেতন, অন্যান্য আয়, বিনিয়োগ ও উৎস করের তথ্য দিন। ডান পাশের ড্যাশবোর্ডে রিয়েল-টাইমে নির্ভুল হিসাব ও কর কমানোর স্মার্ট পরামর্শ দেখুন।
+        </p>
+      </div>
+
+      <!-- Assessment Year Selector -->
+      <div class="flex items-center gap-2 self-start md:self-auto bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 px-2.5">করবর্ষ (AY):</span>
+        <select id="assessmentYear" onchange="calculateTax()" class="num-font text-xs font-bold bg-brand-50 dark:bg-brand-900/50 text-brand-800 dark:text-brand-300 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-800 focus:outline-none">
+          <option value="2026-2027" selected>AY 2026–2027 (আয়বর্ষ ২০২৫-২৬)</option>
+          <option value="2025-2026">AY 2025–2026 (আয়বর্ষ ২০২৪-২৫)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: Interactive Step-by-Step Inputs (7 Cols) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- Step Navigation Pills -->
+        <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          <button onclick="switchTab(1)" id="tabBtn-1" class="tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all bg-brand-600 text-white shadow-sm">
+            <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs num-font">1</span>
+            <span>প্রোফাইল</span>
+          </button>
+          <button onclick="switchTab(2)" id="tabBtn-2" class="tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs num-font">2</span>
+            <span>বেতন ও আয়</span>
+          </button>
+          <button onclick="switchTab(3)" id="tabBtn-3" class="tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs num-font">3</span>
+            <span>বিনিয়োগ ও AIT</span>
+          </button>
+          <button onclick="switchTab(4)" id="tabBtn-4" class="tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs num-font">4</span>
+            <span>সম্পদ ও সারচার্জ</span>
+          </button>
+        </div>
+
+        <!-- View Mode Toggle (Tabbed vs All Expanded) -->
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-4 h-4 text-brand-600"></i>
+            আপনার সকল তথ্য আপনার ব্রাউজারেই সুরক্ষিত থাকে।
+          </span>
+          <button onclick="toggleAllSections()" id="expandAllBtn" class="text-xs font-semibold text-brand-700 dark:text-brand-400 hover:underline flex items-center gap-1">
+            <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+            <span>সবগুলো ধাপ একসাথে দেখুন</span>
+          </button>
+        </div>
+
+        <!-- ==================== STEP 1: TAXPAYER PROFILE ==================== -->
+        <section id="step-1" class="step-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+                <i data-lucide="user-check" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">১. করদাতার প্রোফাইল (Taxpayer Profile)</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">করমুক্ত সীমা ও এলাকাভিত্তিক ন্যূনতম কর নির্ধারণ করুন</p>
+              </div>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 num-font">Step 1/4</span>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <!-- Exemption Category Cards -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+                করমুক্ত আয়ের ক্যাটাগরি (Exemption Category)
+              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                
+                <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all border-brand-600 bg-brand-50/40 dark:bg-brand-950/30" id="catCard-general">
+                  <input type="radio" name="exemptionCat" value="375000" checked onchange="updateCategoryUI(); calculateTax();" class="mt-1 text-brand-600 focus:ring-brand-500" />
+                  <div class="ml-3">
+                    <span class="block text-sm font-bold text-slate-900 dark:text-white">সাধারণ করদাতা (General)</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5 num-font">করমুক্ত সীমা: <strong>৳৩,৭৫,০০০</strong></span>
+                  </div>
+                </label>
+
+                <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all border-slate-200 dark:border-slate-800 hover:border-slate-300" id="catCard-women">
+                  <input type="radio" name="exemptionCat" value="425000" onchange="updateCategoryUI(); calculateTax();" class="mt-1 text-brand-600 focus:ring-brand-500" />
+                  <div class="ml-3">
+                    <span class="block text-sm font-bold text-slate-900 dark:text-white">নারী ও প্রবীণ নাগরিক (65+)</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5 num-font">করমুক্ত সীমা: <strong>৳৪,২৫,০০০</strong></span>
+                  </div>
+                </label>
+
+                <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all border-slate-200 dark:border-slate-800 hover:border-slate-300" id="catCard-disabled">
+                  <input type="radio" name="exemptionCat" value="500000" onchange="updateCategoryUI(); calculateTax();" class="mt-1 text-brand-600 focus:ring-brand-500" />
+                  <div class="ml-3">
+                    <span class="block text-sm font-bold text-slate-900 dark:text-white">প্রতিবন্ধী / তৃতীয় লিঙ্গ</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5 num-font">করমুক্ত সীমা: <strong>৳৫,০০,০০০</strong></span>
+                  </div>
+                </label>
+
+                <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all border-slate-200 dark:border-slate-800 hover:border-slate-300" id="catCard-fighter">
+                  <input type="radio" name="exemptionCat" value="525000" onchange="updateCategoryUI(); calculateTax();" class="mt-1 text-brand-600 focus:ring-brand-500" />
+                  <div class="ml-3">
+                    <span class="block text-sm font-bold text-slate-900 dark:text-white">মুক্তিযোদ্ধা / জুলাই যোদ্ধা</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5 num-font">করমুক্ত সীমা: <strong>৳৫,২৫,০০০</strong></span>
+                  </div>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- Location & Minimum Tax + Dependents -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                  অবস্থান ও ন্যূনতম কর (Location & Min Tax)
+                </label>
+                <select id="minTaxLocation" onchange="calculateTax()" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                  <option value="5000">ঢাকা ও চট্টগ্রাম সিটি কর্পোরেশন (Min: ৳5,000)</option>
+                  <option value="4000">অন্যান্য সিটি কর্পোরেশন এলাকা (Min: ৳4,000)</option>
+                  <option value="3000">সিটি কর্পোরেশনের বাইরের এলাকা (Min: ৳3,000)</option>
+                  <option value="1000">নতুন করদাতা / প্রথমবার নিবন্ধন (Min: ৳1,000)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                  প্রতিবন্ধী সন্তান/নির্ভরশীল (জনপ্রতি +৳৫০,০০০ ছাড়)
+                </label>
+                <div class="relative">
+                  <input type="number" id="disabledDependents" value="0" min="0" max="10" oninput="calculateTax()" class="num-font w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  <span class="absolute right-3.5 top-2.5 text-xs text-slate-400">জন</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- On-Time Return Filing -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                ট্যাক্স ডে-র (৩০ নভেম্বর) মধ্যে রিটার্ন দাখিল করছেন কি?
+              </label>
+              <select id="filedOnTime" onchange="calculateTax()" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <option value="yes">হ্যাঁ — নির্ধারিত সময়ের মধ্যে (পূর্ণ বিনিয়োগ রেয়াত প্রযোজ্য)</option>
+                <option value="no">না — নির্ধারিত সময়ের পরে (বিনিয়োগ রেয়াত বাতিল হবে)</option>
+              </select>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+              <button onclick="switchTab(2)" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-600/20 transition">
+                <span>পরবর্তী ধাপ: বেতন ও আয়</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 2: INCOME BREAKDOWN ==================== -->
+        <section id="step-2" class="step-section hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+                <i data-lucide="wallet" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">২. বার্ষিক বেতন ও অন্যান্য আয় (Annual Earnings)</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">চাকরি, বাড়িভাড়া এবং অন্যান্য করযোগ্য আয়ের বিবরণ</p>
+              </div>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 num-font">Step 2/4</span>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <!-- Smart 1/3rd Exemption Rule Toggle -->
+            <div class="p-4 rounded-xl bg-brand-50/70 dark:bg-brand-950/40 border border-brand-200/80 dark:border-brand-800/60 flex items-start justify-between gap-4">
+              <div class="flex items-start gap-3">
+                <i data-lucide="sparkles" class="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5"></i>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900 dark:text-white">চাকুরিজীবীদের ১/৩ অংশ করমুক্ত সুবিধা (সর্বোচ্চ ৳৪,৫০,০০০)</h4>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    আয়কর আইন অনুযায়ী মোট বেতন ভাতার এক-তৃতীয়াংশ (১/৩) অথবা ৳৪,৫০,০০০ (যেটি কম) স্বয়ংক্রিয়ভাবে করমুক্ত বাদ যাবে।
+                  </p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="autoSalaryExemption" checked onchange="calculateTax()" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+              </label>
+            </div>
+
+            <!-- Salary Inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  বার্ষিক মোট বেতন ও ভাতা (Gross Annual Salary)
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                  <input type="number" id="grossSalary" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">বেসিক, বাড়িভাড়া, মেডিকেল ও কনভেয়েন্স সহ মোট বার্ষিক প্রাপ্তি</p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  উৎসব বোনাস ও ওভারটাইম (Annual Bonus / Incentives)
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                  <input type="number" id="bonusIncome" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">২টি ঈদ/উৎসব বোনাস ও পারফরম্যান্স বোনাস</p>
+              </div>
+            </div>
+
+            <!-- Additional Income Sources -->
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+                অন্যান্য আয়ের খাত (Additional Income Streams)
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    বার্ষিক বাড়িভাড়া আয় (২৫% রক্ষণাবেক্ষণ বাদ দিয়ে অটো হিসাব)
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="houseRentIncome" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    ব্যবসা, কনসালট্যান্সি বা অন্যান্য করযোগ্য আয়
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="otherIncome" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Exempted Preview Mini Bar -->
+            <div class="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span class="text-slate-600 dark:text-slate-400">বেতন হতে ১/৩ করমুক্ত বাদ (Salary Exemption): <strong id="salaryExemptDisplay" class="num-font text-brand-700 dark:text-brand-400">৳0</strong></span>
+              <span class="text-slate-600 dark:text-slate-400">মোট করযোগ্য আয়: <strong id="step2TaxableDisplay" class="num-font text-slate-900 dark:text-white">৳0</strong></span>
+            </div>
+
+            <div class="pt-2 flex justify-between gap-3">
+              <button onclick="switchTab(1)" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>পূর্ববর্তী ধাপ</span>
+              </button>
+              <button onclick="switchTab(3)" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-600/20 transition">
+                <span>পরবর্তী ধাপ: বিনিয়োগ ও রেয়াত</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 3: INVESTMENTS & AIT/TDS ==================== -->
+        <section id="step-3" class="step-section hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+                <i data-lucide="piggy-bank" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">৩. বিনিয়োগ রেয়াত ও উৎস কর (Rebate & AIT/TDS)</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">অনুমোদিত বিনিয়োগের মাধ্যমে কর ছাড় ও ইতোমধ্যে কর্তিত কর সমন্বয়</p>
+              </div>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 num-font">Step 3/4</span>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <!-- Eligible Investments Grid -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  রেয়াতযোগ্য বিনিয়োগসমূহ (Eligible Investments)
+                </label>
+                <span class="text-[11px] font-semibold text-brand-600 dark:text-brand-400">ডিপিএস সর্বোচ্চ সীমা ৳১,২০,০০০ অটো-অ্যাপ্লাইড</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    ব্যাংক বা আর্থিক প্রতিষ্ঠানে ডিপিএস (Annual DPS)
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="invDPS" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    সঞ্চয়পত্র ও সরকারি বন্ড (Sanchaypatra / T-Bond)
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="invSanchaypatra" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    প্রভিডেন্ট ফান্ড ও কল্যাণ তহবিল (PF Contribution)
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="invPF" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    জীবন বীমা প্রিমিয়াম, শেয়ার ও মিউচুয়াল ফান্ড
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="invOther" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AIT / TDS Adjustment (Major Premium Upgrade!) -->
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div class="flex items-center gap-2 mb-3">
+                <i data-lucide="badge-check" class="w-4 h-4 text-teal-600"></i>
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  উৎসে কর্তিত কর বা অগ্রিম কর সমন্বয় (AIT / TDS Deduction)
+                </label>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    বেতন হতে কর্তিত উৎস কর (Salary TDS Deducted)
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="tdsSalary" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    ব্যাংক, গাড়ি বা অন্যান্য অগ্রিম কর (Bank / Car AIT)
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">৳</span>
+                    <input type="number" id="tdsOther" placeholder="0" min="0" oninput="calculateTax()" class="num-font w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-2 flex justify-between gap-3">
+              <button onclick="switchTab(2)" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>পূর্ববর্তী ধাপ</span>
+              </button>
+              <button onclick="switchTab(4)" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-600/20 transition">
+                <span>পরবর্তী ধাপ: সম্পদ ও সারচার্জ</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 4: NET WEALTH & SURCHARGE ==================== -->
+        <section id="step-4" class="step-section hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+                <i data-lucide="building-2" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">৪. নিট সম্পদ ও সারচার্জ (Net Wealth & Surcharge)</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">মোট নিট সম্পদ ৪ কোটি টাকার বেশি হলে সারচার্জ প্রযোজ্য</p>
+              </div>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 num-font">Step 4/4</span>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                আপনার নিট সম্পদের পরিমাণ নির্বাচন করুন (Net Wealth Tier)
+              </label>
+              <select id="wealthSurchargeRate" onchange="calculateTax()" class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <option value="0">৪ কোটি টাকা পর্যন্ত — ০% সারচার্জ (সাধারণ করদাতা)</option>
+                <option value="0.10">৪ কোটি টাকার অধিক হতে ১০ কোটি টাকা পর্যন্ত (বা ২টি গাড়ি / ৮০০০ বর্গফুট বাড়ি) — ১০% সারচার্জ</option>
+                <option value="0.20">১০ কোটি টাকার অধিক হতে ২০ কোটি টাকা পর্যন্ত — ২০% সারচার্জ</option>
+                <option value="0.30">২০ কোটি টাকার অধিক হতে ৫০ কোটি টাকা পর্যন্ত — ৩০% সারচার্জ</option>
+                <option value="0.35">৫০ কোটি টাকার অধিক — ৩৫% সারচার্জ</option>
+              </select>
+            </div>
+
+            <div class="pt-2 flex justify-between gap-3">
+              <button onclick="switchTab(3)" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>পূর্ববর্তী ধাপ</span>
+              </button>
+              <button onclick="openReportModal()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-teal-600 hover:from-brand-700 hover:to-teal-700 text-white font-bold text-sm shadow-lg shadow-brand-600/25 transition">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span>সম্পূর্ণ ট্যাক্স রিপোর্ট দেখুন ও প্রিন্ট করুন</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Live Computation Summary & AI Optimizer (5 Cols) -->
+      <div class="lg:col-span-5 lg:sticky lg:top-20 space-y-5">
+
+        <!-- Main Computation Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none overflow-hidden">
+          
+          <!-- Header -->
+          <div class="px-6 py-4 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Computation Summary</span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400">
+              <span class="w-2 h-2 rounded-full bg-brand-500 animate-ping"></span>
+              Live Sync
+            </span>
+          </div>
+
+          <div class="p-6 space-y-5">
+            <!-- Taxable Annual Income -->
+            <div>
+              <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <span>মোট করযোগ্য বার্ষিক আয় (Taxable Income)</span>
+                <span id="baseExemptionBadge" class="num-font font-semibold text-brand-700 dark:text-brand-400">করমুক্ত সীমা: ৳3,75,000</span>
+              </div>
+              <div id="summaryTaxableIncome" class="num-font text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">৳0.00</div>
+            </div>
+
+            <!-- Grid Breakdown -->
+            <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span class="block text-[11px] font-bold uppercase text-slate-400">নির্ধারিত কর (Gross Tax)</span>
+                <span id="summaryGrossTax" class="num-font text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5 block">৳0.00</span>
+              </div>
+              <div class="p-3 rounded-xl bg-brand-50/60 dark:bg-brand-950/40">
+                <span class="block text-[11px] font-bold uppercase text-brand-700 dark:text-brand-400">বিনিয়োগ রেয়াত (Rebate)</span>
+                <span id="summaryRebate" class="num-font text-base font-bold text-brand-600 dark:text-brand-400 mt-0.5 block">-৳0.00</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span class="block text-[11px] font-bold uppercase text-slate-400">সম্পদ সারচার্জ (Surcharge)</span>
+                <span id="summarySurcharge" class="num-font text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5 block">৳0.00</span>
+              </div>
+              <div class="p-3 rounded-xl bg-teal-50/60 dark:bg-teal-950/40">
+                <span class="block text-[11px] font-bold uppercase text-teal-700 dark:text-teal-400">উৎসে কর বাদ (AIT/TDS)</span>
+                <span id="summaryTDS" class="num-font text-base font-bold text-teal-600 dark:text-teal-400 mt-0.5 block">-৳0.00</span>
+              </div>
+            </div>
+
+            <!-- Final Net Tax Payable Highlight Box -->
+            <div class="p-5 rounded-2xl bg-gradient-to-br from-brand-50 via-teal-50/70 to-emerald-100/60 dark:from-brand-950/80 dark:via-slate-900 dark:to-teal-950/60 border border-brand-200/80 dark:border-brand-800/80 flex items-center justify-between">
+              <div>
+                <span class="block text-xs font-extrabold uppercase tracking-wider text-brand-900 dark:text-brand-300">চূড়ান্ত প্রদেয় কর (Net Tax Payable)</span>
+                <span id="minTaxNotice" class="block text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">রেয়াত, ন্যূনতম কর ও উৎস কর সমন্বয়ের পর</span>
+              </div>
+              <div id="summaryNetPayable" class="num-font text-2xl sm:text-3xl font-extrabold text-brand-700 dark:text-brand-300">৳0.00</div>
+            </div>
+
+            <!-- Interactive Slab Multiplier Matrix -->
+            <div class="pt-2">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Slab Multiplier Matrix</span>
+                <span id="effectiveRateBadge" class="num-font text-[11px] font-bold text-slate-500 dark:text-slate-400">Effective Rate: 0.0%</span>
+              </div>
+              
+              <!-- Visual Slab Bar -->
+              <div class="grid grid-cols-6 gap-1 text-center text-[11px] font-bold num-font">
+                <div id="slabPill-0" class="py-1.5 rounded-lg bg-brand-600 text-white transition-all">0%</div>
+                <div id="slabPill-10" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 transition-all">10%</div>
+                <div id="slabPill-15" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 transition-all">15%</div>
+                <div id="slabPill-20" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 transition-all">20%</div>
+                <div id="slabPill-25" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 transition-all">25%</div>
+                <div id="slabPill-30" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 transition-all">30%</div>
+              </div>
+
+              <!-- Detailed Slab Breakdown List -->
+              <div id="slabBreakdownContainer" class="mt-3 space-y-1.5 max-h-48 overflow-y-auto pr-1 text-xs">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SMART AI TAX OPTIMIZER CARD (Premium Feature) -->
+        <div id="aiOptimizerCard" class="p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/70 dark:from-amber-950/40 dark:to-slate-900 border border-amber-200/80 dark:border-amber-800/60 shadow-sm">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="lightbulb" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">স্মার্ট ট্যাক্স অপ্টিমাইজার পরামর্শ</h3>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900 text-amber-900 dark:text-amber-200">AI Advisor</span>
+              </div>
+              <p id="aiOptimizerText" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                আপনার আয়ের তথ্য দিন অথবা উপরের <strong>"ডেমো ডেটা টেস্ট"</strong> বাটনে ক্লিক করুন—আমরা হিসাব করে জানিয়ে দেবো আর কত টাকা বিনিয়োগ করলে আপনার সর্বোচ্চ কর সাশ্রয় হবে।
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== OFFICIAL PRINTABLE REPORT MODAL ==================== -->
+  <div id="reportModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8">
+      
+      <!-- Modal Action Bar (Hidden when printing) -->
+      <div class="px-6 py-4 bg-slate-100 dark:bg-slate-800 flex items-center justify-between no-print">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-check-2" class="w-5 h-5 text-brand-600"></i>
+          <span class="font-bold text-sm">অফিশিয়াল আয়কর হিসাব বিবরণী (IT-11GA Summary)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow transition">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>প্রিন্ট / Save as PDF</span>
+          </button>
+          <button onclick="closeReportModal()" class="p-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Area -->
+      <div id="printableReport" class="p-8 bg-white text-slate-900 space-y-6">
+        <div class="flex items-start justify-between border-b-2 border-slate-900 pb-4">
+          <div>
+            <h2 class="text-2xl font-extrabold tracking-tight">ট্যাক্সহিসাব — আয়কর গণনা পত্র</h2>
+            <p class="text-xs text-slate-600">জাতীয় রাজস্ব বোর্ড (NBR) আয়কর আইন ২০২৩ অনুযায়ী প্রস্তুতকৃত বিবরণী</p>
+          </div>
+          <div class="text-right num-font">
+            <span id="printAY" class="inline-block px-3 py-1 rounded bg-slate-100 text-xs font-bold">AY 2026–2027</span>
+            <p id="printDate" class="text-[11px] text-slate-500 mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Summary Table -->
+        <div class="grid grid-cols-2 gap-4 text-xs border border-slate-200 rounded-xl p-4 bg-slate-50">
+          <div><span class="text-slate-500">করমুক্ত সীমা (Exemption Limit):</span> <strong id="printExemption" class="num-font ml-1">৳3,75,000</strong></div>
+          <div><span class="text-slate-500">ন্যূনতম কর অঞ্চল:</span> <strong id="printMinTaxZone" class="num-font ml-1">৳5,000</strong></div>
+          <div><span class="text-slate-500">মোট বার্ষিক আয় (Gross Income):</span> <strong id="printGrossIncome" class="num-font ml-1">৳0</strong></div>
+          <div><span class="text-slate-500">করযোগ্য আয় (Taxable Income):</span> <strong id="printTaxableIncome" class="num-font ml-1">৳0</strong></div>
+        </div>
+
+        <!-- Detailed Computation Table -->
+        <table class="w-full text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-300 text-left text-slate-500 uppercase">
+              <th class="py-2">বিবরণ (Description)</th>
+              <th class="py-2 text-right">পরিমাণ (BDT)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 num-font">
+            <tr>
+              <td class="py-2.5 font-sans">স্ল্যাব অনুযায়ী নির্ধারিত মোট কর (Gross Calculated Tax)</td>
+              <td id="printGrossTax" class="py-2.5 text-right font-bold">৳0.00</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 font-sans">অনুমোদিত বিনিয়োগের পরিমাণ (Eligible Investments)</td>
+              <td id="printEligibleInv" class="py-2.5 text-right">৳0.00</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 font-sans text-emerald-700">বাদ: বিনিয়োগ জনিত কর রেয়াত (Investment Tax Rebate)</td>
+              <td id="printRebate" class="py-2.5 text-right font-bold text-emerald-700">-৳0.00</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 font-sans">যোগ: নিট সম্পদ সারচার্জ (Net Wealth Surcharge)</td>
+              <td id="printSurcharge" class="py-2.5 text-right">৳0.00</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 font-sans text-teal-700">বাদ: উৎসে কর্তিত কর ও অগ্রিম কর (AIT / TDS Deducted)</td>
+              <td id="printTDS" class="py-2.5 text-right font-bold text-teal-700">-৳0.00</td>
+            </tr>
+            <tr class="border-t-2 border-slate-900 text-sm bg-slate-100">
+              <td class="py-3 px-2 font-sans font-extrabold">চূড়ান্ত প্রদেয় আয়কর (Net Tax Payable with Return)</td>
+              <td id="printNetTax" class="py-3 px-2 text-right font-extrabold text-emerald-800">৳0.00</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="text-[11px] text-slate-400 text-center pt-4 border-t border-slate-100">
+          Generated by TaxHishab Pro · স্বয়ংক্রিয়ভাবে প্রস্তুতকৃত আয়কর বিবরণী।
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Calculation Engine -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    let showAllMode = false;
+
+    // Format number to BDT currency
+    function formatBDT(num) {
+      return '৳' + Math.round(num).toLocaleString('en-IN');
+    }
+
+    // Tab Switching Logic
+    function switchTab(stepNum) {
+      if (showAllMode) return;
+      for (let i = 1; i <= 4; i++) {
+        const sec = document.getElementById(`step-${i}`);
+        const btn = document.getElementById(`tabBtn-${i}`);
+        if (i === stepNum) {
+          sec.classList.remove('hidden');
+          btn.className = "tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all bg-brand-600 text-white shadow-sm";
+        } else {
+          sec.classList.add('hidden');
+          btn.className = "tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all";
+        }
+      }
+    }
+
+    // Expand / Collapse All Sections
+    function toggleAllSections() {
+      showAllMode = !showAllMode;
+      const btn = document.getElementById('expandAllBtn');
+      for (let i = 1; i <= 4; i++) {
+        const sec = document.getElementById(`step-${i}`);
+        if (showAllMode) {
+          sec.classList.remove('hidden');
+        } else {
+          if (i !== 1) sec.classList.add('hidden');
+        }
+      }
+      btn.innerHTML = showAllMode
+        ? `<i data-lucide="minimize-2" class="w-3.5 h-3.5"></i><span>ট্যাব ভিউতে ফিরে যান</span>`
+        : `<i data-lucide="layers" class="w-3.5 h-3.5"></i><span>সবগুলো ধাপ একসাথে দেখুন</span>`;
+      lucide.createIcons();
+      if (!showAllMode) switchTab(1);
+    }
+
+    // Highlight active Exemption Category Radio Card
+    function updateCategoryUI() {
+      const radios = document.getElementsByName('exemptionCat');
+      const cardIds = ['catCard-general', 'catCard-women', 'catCard-disabled', 'catCard-fighter'];
+      radios.forEach((r, idx) => {
+        const card = document.getElementById(cardIds[idx]);
+        if (r.checked) {
+          card.className = "relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all border-brand-600 bg-brand-50/40 dark:bg-brand-950/30";
+        } else {
+          card.className = "relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all border-slate-200 dark:border-slate-800 hover:border-slate-300";
+        }
+      });
+    }
+
+    // Core NBR Tax Calculation Function
+    function calculateTax() {
+      // 1. Profile Inputs
+      let baseExemption = 375000;
+      const radios = document.getElementsByName('exemptionCat');
+      for (const r of radios) {
+        if (r.checked) baseExemption = parseFloat(r.value);
+      }
+      const disabledDep = parseInt(document.getElementById('disabledDependents').value) || 0;
+      baseExemption += (disabledDep * 50000);
+
+      const minTaxAmount = parseFloat(document.getElementById('minTaxLocation').value) || 5000;
+      const filedOnTime = document.getElementById('filedOnTime').value === 'yes';
+
+      // 2. Earnings Inputs
+      const grossSalary = parseFloat(document.getElementById('grossSalary').value) || 0;
+      const bonusIncome = parseFloat(document.getElementById('bonusIncome').value) || 0;
+      const totalSalary = grossSalary + bonusIncome;
+
+      const autoExempt = document.getElementById('autoSalaryExemption').checked;
+      const salaryExemption = autoExempt ? Math.min(totalSalary / 3, 450000) : 0;
+      const taxableSalary = Math.max(0, totalSalary - salaryExemption);
+
+      const rawHouseRent = parseFloat(document.getElementById('houseRentIncome').value) || 0;
+      const taxableHouseRent = rawHouseRent * 0.75; // 25% statutory maintenance deduction
+      const otherIncome = parseFloat(document.getElementById('otherIncome').value) || 0;
+
+      const totalGrossIncome = totalSalary + rawHouseRent + otherIncome;
+      const totalTaxableIncome = taxableSalary + taxableHouseRent + otherIncome;
+
+      // Update Step 2 Mini Display
+      document.getElementById('salaryExemptDisplay').textContent = formatBDT(salaryExemption);
+      document.getElementById('step2TaxableDisplay').textContent = formatBDT(totalTaxableIncome);
+      document.getElementById('baseExemptionBadge').textContent = `করমুক্ত সীমা: ${formatBDT(baseExemption)}`;
+
+      // 3. Slab Calculation (NBR Rules: 0%, 10%, 15%, 20%, 25%, 30%)
+      const slabs = [
+        { name: 'প্রথম ধাপ (করমুক্ত)', limit: baseExemption, rate: 0, code: 0 },
+        { name: 'পরবর্তী ৳৩,০০,০০০', limit: 300000, rate: 0.10, code: 10 },
+        { name: 'পরবর্তী ৳৪,০০,০০০', limit: 400000, rate: 0.15, code: 15 },
+        { name: 'পরবর্তী ৳৫,০০,০০০', limit: 500000, rate: 0.20, code: 20 },
+        { name: 'পরবর্তী ৳২০,০০,০০০', limit: 2000000, rate: 0.25, code: 25 },
+        { name: 'অবশিষ্ট আয়ের ওপর', limit: Infinity, rate: 0.30, code: 30 }
+      ];
+
+      let remainingIncome = totalTaxableIncome;
+      let grossTax = 0;
+      let slabHTML = '';
+
+      // Reset Slab Matrix Pills
+      [0, 10, 15, 20, 25, 30].forEach(code => {
+        const pill = document.getElementById(`slabPill-${code}`);
+        pill.className = "py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 transition-all";
+      });
+
+      slabs.forEach(slab => {
+        const taxableInSlab = Math.max(0, Math.min(remainingIncome, slab.limit));
+        const taxInSlab = taxableInSlab * slab.rate;
+        grossTax += taxInSlab;
+        remainingIncome -= taxableInSlab;
+
+        if (taxableInSlab > 0 || slab.code === 0) {
+          const pill = document.getElementById(`slabPill-${slab.code}`);
+          pill.className = "py-1.5 rounded-lg bg-brand-600 text-white shadow-sm transition-all";
+        }
+
+        slabHTML += `
+          <div class="flex items-center justify-between py-1.5 px-2.5 rounded-lg ${taxableInSlab > 0 ? 'bg-slate-50 dark:bg-slate-800/80 font-semibold text-slate-800 dark:text-slate-200' : 'text-slate-400'}">
+            <span>${slab.name} (${slab.code}%)</span>
+            <span class="num-font">${formatBDT(taxableInSlab)} → <strong>${formatBDT(taxInSlab)}</strong></span>
+          </div>
+        `;
+      });
+
+      document.getElementById('slabBreakdownContainer').innerHTML = slabHTML;
+
+      // 4. Investment Rebate Calculation
+      const rawDPS = parseFloat(document.getElementById('invDPS').value) || 0;
+      const eligibleDPS = Math.min(rawDPS, 120000); // NBR cap 1.2L on DPS
+      const invSanchay = parseFloat(document.getElementById('invSanchaypatra').value) || 0;
+      const invPF = parseFloat(document.getElementById('invPF').value) || 0;
+      const invOther = parseFloat(document.getElementById('invOther').value) || 0;
+
+      const totalEligibleInvestment = eligibleDPS + invSanchay + invPF + invOther;
+
+      // NBR Rule: Rebate is Lower of (3% of Taxable Income, 15% of Eligible Investment, or 10,00,000)
+      let investmentRebate = 0;
+      if (filedOnTime && grossTax > 0) {
+        const threePercentIncome = totalTaxableIncome * 0.03;
+        const fifteenPercentInv = totalEligibleInvestment * 0.15;
+        investmentRebate = Math.min(threePercentIncome, fifteenPercentInv, 1000000);
+        investmentRebate = Math.min(investmentRebate, grossTax);
+      }
+
+      // 5. Minimum Tax Enforcement
+      let taxAfterRebate = Math.max(0, grossTax - investmentRebate);
+      let isMinTaxApplied = false;
+      if (totalTaxableIncome > baseExemption && taxAfterRebate < minTaxAmount) {
+        taxAfterRebate = minTaxAmount;
+        isMinTaxApplied = true;
+      }
+
+      // 6. Wealth Surcharge
+      const surchargeRate = parseFloat(document.getElementById('wealthSurchargeRate').value) || 0;
+      const surchargeAmount = taxAfterRebate * surchargeRate;
+
+      // 7. AIT / TDS Adjustment
+      const tdsSalary = parseFloat(document.getElementById('tdsSalary').value) || 0;
+      const tdsOther = parseFloat(document.getElementById('tdsOther').value) || 0;
+      const totalTDS = tdsSalary + tdsOther;
+
+      const finalNetTaxPayable = Math.max(0, (taxAfterRebate + surchargeAmount) - totalTDS);
+
+      // Update Summary UI
+      document.getElementById('summaryTaxableIncome').textContent = formatBDT(totalTaxableIncome);
+      document.getElementById('summaryGrossTax').textContent = formatBDT(grossTax);
+      document.getElementById('summaryRebate').textContent = '-' + formatBDT(investmentRebate);
+      document.getElementById('summarySurcharge').textContent = formatBDT(surchargeAmount);
+      document.getElementById('summaryTDS').textContent = '-' + formatBDT(totalTDS);
+      document.getElementById('summaryNetPayable').textContent = formatBDT(finalNetTaxPayable);
+
+      const effRate = totalTaxableIncome > 0 ? ((taxAfterRebate / totalTaxableIncome) * 100).toFixed(1) : '0.0';
+      document.getElementById('effectiveRateBadge').textContent = `Effective Rate: ${effRate}%`;
+
+      document.getElementById('minTaxNotice').textContent = isMinTaxApplied
+        ? `ন্যূনতম কর (${formatBDT(minTaxAmount)}) প্রযোজ্য হয়েছে`
+        : `রেয়াত ও উৎস কর সমন্বয়ের পর নিট প্রদেয়`;
+
+      // Update Smart AI Tax Optimizer Advice
+      updateAIOptimizer(totalTaxableIncome, baseExemption, grossTax, totalEligibleInvestment, investmentRebate, minTaxAmount, filedOnTime);
+
+      // Sync Printable Modal Fields
+      document.getElementById('printAY').textContent = document.getElementById('assessmentYear').value;
+      document.getElementById('printDate').textContent = 'তারিখ: ' + new Date().toLocaleDateString('bn-BD');
+      document.getElementById('printExemption').textContent = formatBDT(baseExemption);
+      document.getElementById('printMinTaxZone').textContent = formatBDT(minTaxAmount);
+      document.getElementById('printGrossIncome').textContent = formatBDT(totalGrossIncome);
+      document.getElementById('printTaxableIncome').textContent = formatBDT(totalTaxableIncome);
+      document.getElementById('printGrossTax').textContent = formatBDT(grossTax);
+      document.getElementById('printEligibleInv').textContent = formatBDT(totalEligibleInvestment);
+      document.getElementById('printRebate').textContent = '-' + formatBDT(investmentRebate);
+      document.getElementById('printSurcharge').textContent = formatBDT(surchargeAmount);
+      document.getElementById('printTDS').textContent = '-' + formatBDT(totalTDS);
+      document.getElementById('printNetTax').textContent = formatBDT(finalNetTaxPayable);
+    }
+
+    // Smart AI Optimizer Logic
+    function updateAIOptimizer(taxableIncome, baseExemption, grossTax, currentInv, currentRebate, minTax, filedOnTime) {
+      const box = document.getElementById('aiOptimizerText');
+      if (taxableIncome <= baseExemption) {
+        box.innerHTML = `আপনার করযোগ্য আয় করমুক্ত সীমার (${formatBDT(baseExemption)}) নিচে রয়েছে। আপনার ওপর কোনো আয়কর প্রযোজ্য নয়!`;
+        return;
+      }
+      if (!filedOnTime) {
+        box.innerHTML = `⚠️ আপনি ৩০ নভেম্বরের পরে রিটার্ন দাখিল নির্বাচন করায় <strong>বিনিয়োগ রেয়াত সুবিধা পাচ্ছেন না</strong>। সময়মতো রিটার্ন জমা দিলে সর্বোচ্চ <strong>${formatBDT(Math.min(taxableIncome * 0.03, grossTax - minTax))}</strong> পর্যন্ত কর সাশ্রয় করতে পারতেন।`;
+        return;
+      }
+
+      // Max possible rebate is 3% of taxable income (requiring 20% of taxable income as investment)
+      const maxOptimalInv = taxableIncome * 0.20;
+      const maxPossibleRebate = Math.min(taxableIncome * 0.03, 1000000, Math.max(0, grossTax - minTax));
+      const additionalInvNeeded = Math.max(0, maxOptimalInv - currentInv);
+      const potentialExtraSavings = Math.max(0, maxPossibleRebate - currentRebate);
+
+      if (potentialExtraSavings > 100 && additionalInvNeeded > 0) {
+        box.innerHTML = `💡 <strong>কর সাশ্রয়ের সুযোগ:</strong> আপনি যদি সঞ্চয়পত্র, ডিপিএস বা মিউচুয়াল ফান্ডে আরও <strong>${formatBDT(additionalInvNeeded)}</strong> বিনিয়োগ করেন, তবে অতিরিক্ত আরও <strong>${formatBDT(potentialExtraSavings)}</strong> কর রেয়াত পাবেন!`;
+      } else {
+        box.innerHTML = `🎉 <strong>অভিনন্দন!</strong> আপনি আপনার আয়ের বিপরীতে সর্বোচ্চ অনুমোদিত কর রেয়াত (${formatBDT(currentRebate)}) অর্জন করেছেন।`;
+      }
+    }
+
+    // Load 1-Click Realistic Demo Data
+    function loadDemoData() {
+      document.getElementById('grossSalary').value = 1200000;
+      document.getElementById('bonusIncome').value = 200000;
+      document.getElementById('houseRentIncome').value = 180000;
+      document.getElementById('otherIncome').value = 50000;
+      document.getElementById('invDPS').value = 60000;
+      document.getElementById('invSanchaypatra').value = 50000;
+      document.getElementById('invPF').value = 40000;
+      document.getElementById('tdsSalary').value = 15000;
+      calculateTax();
+    }
+
+    // Reset Calculator
+    function resetCalculator() {
+      ['grossSalary', 'bonusIncome', 'houseRentIncome', 'otherIncome', 'invDPS', 'invSanchaypatra', 'invPF', 'invOther', 'tdsSalary', 'tdsOther'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('disabledDependents').value = 0;
+      document.getElementById('wealthSurchargeRate').value = '0';
+      calculateTax();
+    }
+
+    // Modal Controls
+    function openReportModal() {
+      calculateTax();
+      document.getElementById('reportModal').classList.remove('hidden');
+    }
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.add('hidden');
+    }
+
+    // Dark Mode Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.classList.toggle('dark');
+      const icon = document.getElementById('themeIcon');
+      icon.setAttribute('data-lucide', html.classList.contains('dark') ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+
+    // Initial Calculation Run
+    calculateTax();
+  </script>
+</body>
+</html>
