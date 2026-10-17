@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFix - My Tickets & Live Chat</title>
+
+    <!-- Fonts: Plus Jakarta Sans & Inter (Matching Home & Report Pages) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        ink: '#050816'
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) forwards',
+                        'pulse-soft': 'pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(14px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        pulseSoft: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '.55' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+
+        /* Signature Gradients & Buttons from Home Page */
+        .text-gradient-dark {
+            background-image: linear-gradient(100deg, #4f46e5 0%, #2563eb 50%, #0891b2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background-image: linear-gradient(135deg, #6366f1, #3b82f6 60%, #06b6d4);
+            box-shadow: 0 10px 25px -8px rgba(79, 70, 229, .6), inset 0 1px 0 rgba(255, 255, 255, .35);
+            transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.06);
+            box-shadow: 0 16px 32px -8px rgba(79, 70, 229, .75), inset 0 1px 0 rgba(255, 255, 255, .4);
+        }
+
+        /* Card & Row Hover Effects */
+        .ticket-card {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            transition: all 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+        }
+        .ticket-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--status-color, #6366f1);
+            border-top-left-radius: 1.25rem;
+            border-bottom-left-radius: 1.25rem;
+        }
+        .ticket-card:hover {
+            transform: translateY(-3px);
+            border-color: #c7d2fe;
+            box-shadow: 0 22px 45px -25px rgba(49, 46, 129, 0.35);
+        }
+        .ticket-card.active-ticket {
+            border-color: #818cf8;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f7ff 100%);
+            box-shadow: 0 20px 40px -22px rgba(79, 70, 229, 0.35);
+        }
+
+        /* Chat Bubbles from Home Page */
+        .bubble-in {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-radius: 1.25rem;
+            border-bottom-left-radius: 0.35rem;
+            box-shadow: 0 4px 15px -8px rgba(15, 23, 42, 0.1);
+        }
+        .bubble-out {
+            background-image: linear-gradient(135deg, #4f46e5, #3b82f6 70%, #0284c7);
+            color: #ffffff;
+            border-radius: 1.25rem;
+            border-bottom-right-radius: 0.35rem;
+            box-shadow: 0 12px 24px -10px rgba(79, 70, 229, 0.65);
+        }
+
+        /* Ping Animation */
+        @keyframes ping-soft {
+            0% { transform: scale(1); opacity: .75; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+        .ping-soft { animation: ping-soft 1.8s cubic-bezier(0, 0, .2, 1) infinite; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#F3F4F6] text-slate-800 h-screen overflow-hidden flex selection:bg-indigo-500 selection:text-white">
+
+    <!-- ===================== SIDEBAR (Matches Report Page) ===================== -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200/80 flex-col hidden md:flex z-30 shadow-sm h-full shrink-0">
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-6 border-b border-slate-100">
+            <a href="#" class="flex items-center gap-3">
+                <div class="w-9 h-9 text-white flex items-center justify-center rounded-xl font-bold text-lg btn-primary">
+                    <i class="fa-solid fa-c"></i>
+                </div>
+                <span class="text-xl font-extrabold text-slate-900 tracking-tight">Campus<span class="text-gradient-dark">Fix</span></span>
+            </a>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                <i class="fa-solid fa-house w-5 text-center text-slate-400"></i> Dashboard
+            </a>
+            
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                <i class="fa-solid fa-triangle-exclamation w-5 text-center text-slate-400"></i> Report Problem
+            </a>
+            
+            <!-- Active Link: My Tickets -->
+            <a href="#" onclick="showMobileListView()" class="flex items-center justify-between px-4 py-3 btn-primary text-white font-bold rounded-xl transition-all group">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-ticket w-5 text-center"></i> My Tickets
+                </div>
+                <span id="sidebarTicketCount" class="px-2 py-0.5 text-xs font-extrabold rounded-full bg-white/20 text-white">5</span>
+            </a>
+            
+            <a href="#" class="flex items-center justify-between px-4 py-3 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                <div class="flex items-center gap-3">
+                    <i class="fa-regular fa-bell w-5 text-center text-slate-400"></i> Notifications
+                </div>
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            </a>
+            
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors mt-8">
+                <i class="fa-regular fa-user w-5 text-center text-slate-400"></i> Profile
+            </a>
+        </div>
+
+        <!-- Quick SLA Helper Box in Sidebar -->
+        <div class="p-4 m-4 rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white relative overflow-hidden shadow-lg">
+            <div class="absolute -right-6 -top-6 w-20 h-20 rounded-full bg-indigo-500/30 blur-xl"></div>
+            <div class="flex items-center gap-2 text-xs font-bold text-indigo-300 uppercase tracking-wider mb-1.5">
+                <span class="relative flex w-2 h-2">
+                    <span class="ping-soft absolute inline-flex w-full h-full rounded-full bg-emerald-400"></span>
+                    <span class="relative inline-flex w-2 h-2 rounded-full bg-emerald-400"></span>
+                </span>
+                Live Support
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">Chat directly with assigned maintenance staff & verify fixes in real time.</p>
+            <div class="flex items-center justify-between text-[11px] font-semibold text-indigo-200 pt-2 border-t border-white/10">
+                <span>Avg Resolution</span>
+                <span class="text-emerald-400 font-bold"><i class="fa-solid fa-bolt mr-1"></i>3.5 hrs</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===================== MAIN CONTENT AREA ===================== -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        <!-- Ambient Background Glows (Matches Home Page) -->
+        <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-200/35 blur-[100px] pointer-events-none -z-10"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-cyan-200/30 blur-[100px] pointer-events-none -z-10"></div>
+
+        <!-- Top Navbar -->
+        <header class="h-20 bg-white/85 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 md:px-8 z-20 shrink-0">
+            
+            <!-- Left: Mobile Menu & Global Search -->
+            <div class="flex items-center gap-4 flex-1 max-w-md">
+                <button id="mobileMenuBtn" class="md:hidden w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="relative w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input id="globalSearchInput" type="text" placeholder="Search by Ticket #CF, title, room or staff..." class="w-full bg-slate-100/90 border border-transparent focus:border-indigo-300 rounded-full py-2.5 pl-11 pr-4 text-sm font-medium text-slate-800 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all outline-none">
+                </div>
+            </div>
+
+            <!-- Right: Quick Report Button, Notifications & Profile -->
+            <div class="flex items-center gap-4">
+                <a href="#" class="hidden sm:inline-flex items-center gap-2 btn-primary text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Report Problem</span>
+                </a>
+
+                <button class="w-10 h-10 rounded-full bg-slate-100/80 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 transition-colors relative flex items-center justify-center">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                    <span class="absolute top-2 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+                </button>
+
+                <div class="flex items-center gap-3 pl-2 border-l border-slate-200">
+                    <div class="h-9 w-9 rounded-full bg-indigo-100 border-2 border-white shadow-sm overflow-hidden cursor-pointer">
+                        <img src="https://ui-avatars.com/api/?name=John+Doe&background=4F46E5&color=fff&bold=true" alt="John Doe">
+                    </div>
+                    <div class="hidden lg:block leading-tight">
+                        <p class="text-xs font-extrabold text-slate-900">John Doe</p>
+                        <p class="text-[11px] font-medium text-slate-400">Student · CSE</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===================== WORKSPACE BODY ===================== -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-7xl mx-auto">
+
+                <!-- Page Heading & View Mode Toggle -->
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
+                    <div>
+                        <div class="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[.2em] uppercase text-indigo-600 mb-1.5">
+                            <span class="w-4 h-0.5 bg-indigo-500 rounded-full"></span> Student Portal · Ticket Tracker
+                        </div>
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">My Tickets & Live Resolution</h1>
+                        <p class="text-sm text-slate-500 mt-1">View and track all your reported campus problems, chat with assigned staff, and verify completed repairs.</p>
+                    </div>
+
+                    <!-- Mini Summary Counters -->
+                    <div class="grid grid-cols-4 gap-2.5 bg-white p-2 rounded-2xl border border-slate-200/80 shadow-sm shrink-0">
+                        <div class="px-3 py-1.5 rounded-xl bg-slate-50 text-center">
+                            <span id="statTotal" class="block text-lg font-extrabold text-slate-900 leading-none">5</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total</span>
+                        </div>
+                        <div class="px-3 py-1.5 rounded-xl bg-rose-50/70 text-center">
+                            <span id="statOpen" class="block text-lg font-extrabold text-rose-600 leading-none">1</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-rose-500">Open</span>
+                        </div>
+                        <div class="px-3 py-1.5 rounded-xl bg-blue-50/70 text-center">
+                            <span id="statProgress" class="block text-lg font-extrabold text-blue-600 leading-none">2</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-500">Active</span>
+                        </div>
+                        <div class="px-3 py-1.5 rounded-xl bg-emerald-50/70 text-center">
+                            <span id="statResolved" class="block text-lg font-extrabold text-emerald-600 leading-none">2</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Done</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== MASTER-DETAIL SPLIT LAYOUT ===================== -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                    <!-- ========== LEFT COLUMN: MY TICKETS LIST (Screen 6) ========== -->
+                    <section id="ticketsListSection" class="lg:col-span-5 flex flex-col gap-4">
+                        
+                        <!-- Filter Tabs Bar (All, Open, In Progress, Resolved, Closed) -->
+                        <div class="bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-1 overflow-x-auto no-scrollbar" id="filterTabs">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+
+                        <!-- Tickets List Container -->
+                        <div id="ticketsListContainer" class="space-y-3.5">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyTicketsState" class="hidden bg-white rounded-3xl border border-slate-200/80 p-10 text-center shadow-sm">
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-2xl mx-auto mb-3">
+                                <i class="fa-solid fa-ticket"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-800">No tickets match your filter</h3>
+                            <p class="text-xs text-slate-400 mt-1">Try switching status tabs or clearing the search bar.</p>
+                        </div>
+                    </section>
+
+                    <!-- ========== RIGHT COLUMN: TICKET DETAILS, TRACKING, LIVE CHAT & VERIFICATION (Screens 7 & 8) ========== -->
+                    <section id="ticketDetailSection" class="lg:col-span-7 bg-white rounded-[1.75rem] border border-slate-200/90 shadow-[0_25px_70px_-30px_rgba(49,46,129,0.28)] overflow-hidden flex flex-col">
+                        
+                        <!-- Top Bar: Back Button + SLA Countdown Chip -->
+                        <div class="px-6 py-4 bg-gradient-to-r from-slate-50 via-white to-indigo-50/40 border-b border-slate-100 flex items-center justify-between gap-3">
+                            <button onclick="showMobileListView()" class="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors py-1 px-2.5 rounded-lg hover:bg-slate-100">
+                                <i class="fa-solid fa-arrow-left"></i>
+                                <span>Back to Tickets</span>
+                            </button>
+
+                            <div class="flex items-center gap-2">
+                                <span id="detailSlaBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <i class="fa-solid fa-stopwatch"></i>
+                                    <span id="detailSlaText">SLA: 03h 18m left</span>
+                                </span>
+                                <span id="detailRecurringBadge" class="hidden items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">
+                                    <i class="fa-solid fa-repeat text-[10px]"></i> Recurring
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Header Info (Matches Prototype Screen 7 & 8 Header) -->
+                        <div class="p-6 pb-4 border-b border-slate-100">
+                            <div class="flex flex-wrap items-start justify-between gap-4">
+                                <div>
+                                    <div class="flex items-center gap-2.5">
+                                        <span id="detailTicketId" class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">Ticket #CF-1025</span>
+                                        <span id="detailCategoryChip" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                            <i class="fa-solid fa-display mr-1 text-indigo-500"></i>Projector
+                                        </span>
+                                    </div>
+                                    <h2 id="detailTitle" class="text-base md:text-lg font-bold text-slate-800 mt-1">Projector not working</h2>
+                                    <p id="detailLocation" class="text-xs md:text-sm font-medium text-slate-500 mt-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot text-indigo-500"></i>
+                                        <span>Room 304 • Academic Building A</span>
+                                    </p>
+                                </div>
+
+                                <!-- Status & Priority Badges -->
+                                <div class="flex flex-row sm:flex-col items-end gap-2">
+                                    <span id="detailStatusBadge" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-blue-50 text-blue-600 border border-blue-200">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                        In Progress
+                                    </span>
+                                    <span id="detailPriorityBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-600 border border-rose-200">
+                                        High Priority
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Visual 7-Step Ticket Lifecycle Stepper -->
+                            <div class="mt-5 pt-4 border-t border-slate-100">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 mb-2">
+                                    <span class="uppercase tracking-wider text-indigo-600"><i class="fa-solid fa-route mr-1"></i>Live Resolution Lifecycle</span>
+                                    <span id="lifecycleProgressLabel" class="text-slate-600">Step 4 of 7 · Technician Working</span>
+                                </div>
+                                <div id="lifecycleStepper" class="grid grid-cols-7 gap-1.5">
+                                    <!-- Populated dynamically via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Navigation Tabs: Details | Chat | Updates | Resolution (Exact Prototype Tabs) -->
+                            <div class="flex items-center gap-2 mt-6 border-b border-slate-100 -mb-4 overflow-x-auto no-scrollbar" role="tablist">
+                                <button onclick="switchDetailTab('details')" id="tabBtn-details" class="detail-tab-btn px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                                    <i class="fa-regular fa-file-lines"></i> Details
+                                </button>
+                                <button onclick="switchDetailTab('chat')" id="tabBtn-chat" class="detail-tab-btn px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                                    <i class="fa-regular fa-comments"></i> Chat
+                                    <span id="chatUnreadBadge" class="px-1.5 py-0.2 text-[10px] rounded-full bg-indigo-100 text-indigo-700 font-extrabold">Live</span>
+                                </button>
+                                <button onclick="switchDetailTab('updates')" id="tabBtn-updates" class="detail-tab-btn px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left"></i> Updates
+                                </button>
+                                <button onclick="switchDetailTab('resolution')" id="tabBtn-resolution" class="detail-tab-btn px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                                    <i class="fa-solid fa-shield-check"></i> Resolution
+                                    <span id="resActionDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ================= TAB 1: DETAILS VIEW ================= -->
+                        <div id="tabPane-details" class="p-6 space-y-5 hidden animate-fade-in-up">
+                            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">Problem Description</span>
+                                <p id="detailDescription" class="text-sm text-slate-700 leading-relaxed"></p>
+                            </div>
+
+                            <!-- Metadata Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3.5">
+                                    <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                                        <i class="fa-solid fa-user-gear"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Assigned Staff & Dept</span>
+                                        <p id="detailStaffName" class="text-sm font-extrabold text-slate-900 truncate"></p>
+                                        <p id="detailDepartment" class="text-xs font-medium text-indigo-600 truncate"></p>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3.5">
+                                    <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm shrink-0">
+                                        <i class="fa-regular fa-calendar-check"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Reported Date & SLA Target</span>
+                                        <p id="detailReportedAt" class="text-sm font-extrabold text-slate-900 truncate"></p>
+                                        <p id="detailSlaTarget" class="text-xs font-medium text-slate-500 truncate"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reported Evidence Photo -->
+                            <div>
+                                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400 block mb-2.5">Attached Photo Evidence</span>
+                                <div class="relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-w-sm">
+                                    <img id="detailAttachmentImg" src="" alt="Problem Attachment" class="w-full h-44 object-cover">
+                                    <div class="px-4 py-2.5 bg-white flex items-center justify-between text-xs">
+                                        <span class="font-bold text-slate-700"><i class="fa-regular fa-image text-indigo-500 mr-1.5"></i>reported-issue-photo.jpg</span>
+                                        <span class="text-slate-400 font-medium">Uploaded by Reporter</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Jump CTA -->
+                            <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
+                                <p class="text-xs text-slate-500">Need to share more details with the assigned technician?</p>
+                                <button onclick="switchDetailTab('chat')" class="btn-primary text-white text-xs font-bold px-5 py-2.5 rounded-full inline-flex items-center gap-2">
+                                    <i class="fa-regular fa-comments"></i> Open Live Chat
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ================= TAB 2: LIVE CHAT VIEW (Screen 7) ================= -->
+                        <div id="tabPane-chat" class="flex flex-col h-[470px] animate-fade-in-up">
+                            
+                            <!-- Active Staff Chat Subheader -->
+                            <div class="px-6 py-3 bg-slate-50/90 border-b border-slate-100 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="relative">
+                                        <img id="chatStaffAvatar" src="https://ui-avatars.com/api/?name=Staff+A&background=4f46e5&color=fff" alt="Staff" class="w-9 h-9 rounded-full object-cover shadow-sm">
+                                        <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white"></span>
+                                    </div>
+                                    <div>
+                                        <p id="chatHeaderStaff" class="text-xs md:text-sm font-extrabold text-slate-900 leading-tight">Staff A · ICT Department</p>
+                                        <p class="text-[11px] font-medium text-emerald-600 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle text-[6px]"></i> Online · Direct Ticket Channel
+                                        </p>
+                                    </div>
+                                </div>
+                                <span class="text-[11px] font-semibold text-slate-400 hidden sm:inline-flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-slate-200/80">
+                                    <i class="fa-solid fa-lock text-emerald-500 text-[10px]"></i> Saved to Ticket History
+                                </span>
+                            </div>
+
+                            <!-- Chat Messages Scroll Container -->
+                            <div id="chatMessagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-slate-50/40 to-white">
+                                <!-- Populated dynamically via JS -->
+                            </div>
+
+                            <!-- Quick Smart Replies -->
+                            <div class="px-6 py-2 bg-slate-50/70 border-t border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 shrink-0">Quick reply:</span>
+                                <button onclick="sendQuickReply('Are you on the way to the room?')" class="text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200/80 px-3 py-1 rounded-full whitespace-nowrap transition">
+                                    Are you on the way?
+                                </button>
+                                <button onclick="sendQuickReply('The lecture starts in 15 minutes, please hurry.')" class="text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200/80 px-3 py-1 rounded-full whitespace-nowrap transition">
+                                    Class starts in 15 mins
+                                </button>
+                                <button onclick="sendSimulatedPhoto()" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-3 py-1 rounded-full whitespace-nowrap transition flex items-center gap-1">
+                                    <i class="fa-regular fa-image"></i> Send Closer Photo
+                                </button>
+                            </div>
+
+                            <!-- Message Input Bar (Matches Prototype Screen 7 Bottom Bar) -->
+                            <form id="chatForm" onsubmit="handleChatSubmit(event)" class="p-4 bg-white border-t border-slate-200/80 flex items-center gap-3">
+                                <div class="flex-1 flex items-center bg-slate-100/90 focus-within:bg-white border border-slate-200/90 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-500/10 rounded-full px-4 py-2 transition-all">
+                                    <input id="chatInput" type="text" placeholder="Type a message to assigned staff..." autocomplete="off" class="w-full bg-transparent text-sm font-medium text-slate-800 placeholder-slate-400 outline-none">
+                                    <div class="flex items-center gap-2 text-slate-400 pl-2">
+                                        <button type="button" onclick="sendSimulatedPhoto()" title="Attach photo evidence" class="w-8 h-8 rounded-full hover:bg-slate-200/60 hover:text-indigo-600 flex items-center justify-center transition">
+                                            <i class="fa-regular fa-image"></i>
+                                        </button>
+                                        <button type="button" onclick="sendSimulatedPhoto()" title="Attach file" class="w-8 h-8 rounded-full hover:bg-slate-200/60 hover:text-indigo-600 flex items-center justify-center transition">
+                                            <i class="fa-solid fa-paperclip"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-11 h-11 rounded-2xl btn-primary text-white flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- ================= TAB 3: UPDATES / AUDIT TRAIL VIEW ================= -->
+                        <div id="tabPane-updates" class="p-6 hidden animate-fade-in-up">
+                            <div class="flex items-center justify-between mb-5">
+                                <div>
+                                    <h3 class="text-sm font-extrabold text-slate-900">Ticket Audit Trail & Status History</h3>
+                                    <p class="text-xs text-slate-500">Every action is time-stamped for complete operational transparency.</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">Live Log</span>
+                            </div>
+
+                            <ol id="auditTimelineList" class="relative border-l-2 border-indigo-100 ml-3.5 space-y-6 py-2">
+                                <!-- Populated dynamically via JS -->
+                            </ol>
+                        </div>
+
+                        <!-- ================= TAB 4: RESOLUTION & VERIFICATION VIEW (Screen 8) ================= -->
+                        <div id="tabPane-resolution" class="p-6 space-y-6 hidden animate-fade-in-up">
+                            
+                            <!-- Resolution Metadata Card -->
+                            <div>
+                                <h3 class="text-sm font-extrabold text-slate-900 mb-3">Resolution Details</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                                    <div>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Resolved by</span>
+                                        <p id="resStaffInfo" class="text-sm font-extrabold text-slate-800 mt-1 flex items-center gap-2">
+                                            <i class="fa-solid fa-user-check text-indigo-600"></i>
+                                            <span>Staff A (ICT Department)</span>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Resolved at</span>
+                                        <p id="resTimeInfo" class="text-sm font-extrabold text-slate-800 mt-1 flex items-center gap-2">
+                                            <i class="fa-regular fa-clock text-indigo-600"></i>
+                                            <span>Oct 25, 2024, 2:30 PM</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Before & After Image Comparison (Matches Prototype Screen 8) -->
+                            <div>
+                                <div class="grid grid-cols-1 sm:grid-cols-11 gap-4 items-center">
+                                    <!-- Before Image -->
+                                    <div class="sm:col-span-5">
+                                        <span class="text-xs font-extrabold text-slate-700 block mb-2">Before Image</span>
+                                        <div class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm relative">
+                                            <img id="resBeforeImg" src="" alt="Before Repair" class="w-full h-36 object-cover">
+                                            <span class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600/90 text-white backdrop-blur-sm">Reported Issue</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Arrow Indicator -->
+                                    <div class="sm:col-span-1 flex justify-center">
+                                        <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shadow-sm">
+                                            <i class="fa-solid fa-arrow-right hidden sm:inline"></i>
+                                            <i class="fa-solid fa-arrow-down sm:hidden"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- After Image -->
+                                    <div class="sm:col-span-5">
+                                        <span class="text-xs font-extrabold text-slate-700 block mb-2">After Image</span>
+                                        <div class="rounded-2xl overflow-hidden border border-emerald-200 bg-slate-100 shadow-sm relative">
+                                            <img id="resAfterImg" src="" alt="After Repair" class="w-full h-36 object-cover">
+                                            <span class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600/90 text-white backdrop-blur-sm">Staff Evidence</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Resolution Note -->
+                            <div>
+                                <span class="text-xs font-extrabold text-slate-700 block mb-2">Resolution Note</span>
+                                <div id="resNoteBox" class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 text-sm font-medium text-slate-700 leading-relaxed">
+                                    Replaced the power cable. Projector is now working properly.
+                                </div>
+                            </div>
+
+                            <!-- Reporter Verification Action Box (Yes, Verified / No, Reopen) -->
+                            <div class="pt-4 border-t border-slate-200/80">
+                                <h4 class="text-base font-extrabold text-slate-900">Verify the Resolution</h4>
+                                <p id="verifySubtext" class="text-xs text-slate-500 mt-0.5 mb-4">Is the problem solved to your satisfaction? A ticket only closes after your confirmation.</p>
+
+                                <div id="verificationButtonsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <button type="button" onclick="handleVerification(true)" class="py-3.5 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                        <span>Yes, Verified</span>
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </button>
+                                    <button type="button" onclick="handleVerification(false)" class="py-3.5 px-5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 border-2 border-rose-200 font-extrabold text-sm transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                        <span>No, Reopen</span>
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Feedback Banner (Shown after action) -->
+                                <div id="verificationFeedbackBanner" class="hidden mt-4 p-4 rounded-2xl border text-sm font-bold items-center justify-between gap-3">
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </section>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- ===================== INTERACTIVE JAVASCRIPT LOGIC ===================== -->
+    <script>
+        // Ticket Dataset (Matches Prototype Screens 6, 7 & 8)
+        const ticketsData = [
+            {
+                id: 'CF-1025',
+                title: 'Projector not working',
+                category: 'Projector / ICT',
+                categoryIcon: 'fa-display',
+                location: 'Room 304 • Academic Building A',
+                priority: 'High',
+                status: 'In Progress',
+                timeAgo: '2 hours ago',
+                reportedAt: 'Oct 25, 2024 · 10:00 AM',
+                slaText: '03h 18m left',
+                slaTarget: '4 Hours Resolution SLA',
+                slaPercent: 68,
+                slaState: 'warn',
+                recurring: true,
+                staffName: 'Staff A (Masud Rana)',
+                department: 'ICT Department',
+                resolvedAt: 'Oct 25, 2024, 2:30 PM',
+                description: 'The multimedia projector in Room 304 is not turning on for the morning lecture. It shows a solid red standby indicator light and does not detect HDMI input.',
+                thumbImg: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=300&q=80',
+                beforeImg: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80',
+                afterImg: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80',
+                resolutionNote: 'Replaced the faulty power cable and reset the HDMI controller board. Projector is now working properly.',
+                messages: [
+                    { sender: 'student', text: 'The projector is not turning on. It shows a red light.', time: '10:15 AM' },
+                    { sender: 'staff', text: 'We are checking it. Can you share a closer photo?', time: '10:18 AM' },
+                    { sender: 'student', image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=500&q=80', caption: 'projector-red-light.jpg', time: '10:20 AM' },
+                    { sender: 'staff', text: 'Thanks. We will fix it soon.', time: '10:25 AM' }
+                ],
+                audit: [
+                    { time: '10:00 AM', title: 'Student reported problem', desc: 'Ticket #CF-1025 created with High Priority', done: true },
+                    { time: '10:05 AM', title: 'Smart Department Routing', desc: 'Automatically routed to ICT Department', done: true },
+                    { time: '10:15 AM', title: 'Manager assigned Staff A', desc: 'SLA countdown timer started (4 Hours)', done: true },
+                    { time: '10:30 AM', title: 'Staff started work & live chat', desc: 'Technician inspecting Room 304 projector', done: true }
+                ]
+            },
+            {
+                id: 'CF-1024',
+                title: 'AC not working',
+                category: 'Air Conditioner',
+                categoryIcon: 'fa-snowflake',
+                location: 'Room 402 • Academic Building A',
+                priority: 'Medium',
+                status: 'Open',
+                timeAgo: '1 day ago',
+                reportedAt: 'Oct 24, 2024 · 02:15 PM',
+                slaText: '06h 40m left',
+                slaTarget: '12 Hours Resolution SLA',
+                slaPercent: 30,
+                slaState: 'ok',
+                recurring: true,
+                staffName: 'Jahid Hasan',
+                department: 'Electrical / Maintenance',
+                resolvedAt: 'Pending technician completion',
+                description: 'Split AC unit #2 in Room 402 is blowing warm air and making a rattling noise during afternoon classes.',
+                thumbImg: 'https://images.unsplash.com/photo-1631545806609-35d4ae490431?auto=format&fit=crop&w=300&q=80',
+                beforeImg: 'https://images.unsplash.com/photo-1631545806609-35d4ae490431?auto=format&fit=crop&w=600&q=80',
+                afterImg: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+                resolutionNote: 'Technician is scheduled to refill coolant gas and clean the filter unit.',
+                messages: [
+                    { sender: 'student', text: 'AC #2 in Room 402 is not cooling at all.', time: '02:20 PM' },
+                    { sender: 'staff', text: 'Received your report. Our electrical team will inspect the compressor shortly.', time: '02:45 PM' }
+                ],
+                audit: [
+                    { time: '02:15 PM', title: 'Student reported problem', desc: 'Ticket #CF-1024 opened for Room 402', done: true },
+                    { time: '02:25 PM', title: 'Routed to Electrical Department', desc: 'Awaiting technician dispatch', done: true }
+                ]
+            },
+            {
+                id: 'CF-1023',
+                title: 'Wi-Fi issue',
+                category: 'IT / Network',
+                categoryIcon: 'fa-wifi',
+                location: 'Library • Main Building',
+                priority: 'High',
+                status: 'Resolved',
+                timeAgo: '3 days ago',
+                reportedAt: 'Oct 22, 2024 · 11:10 AM',
+                slaText: 'Resolved in 2h 15m',
+                slaTarget: '24 Hours IT SLA',
+                slaPercent: 100,
+                slaState: 'done',
+                recurring: false,
+                staffName: 'Staff B (Tanvir Ahmed)',
+                department: 'ICT Network Team',
+                resolvedAt: 'Oct 22, 2024, 1:25 PM',
+                description: 'Campus-Student Wi-Fi router on the 2nd floor reading zone disconnects every 5 minutes.',
+                thumbImg: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=300&q=80',
+                beforeImg: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=600&q=80',
+                afterImg: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=600&q=80',
+                resolutionNote: 'Replaced the PoE adapter and updated access point firmware. Signal strength is stable at 300 Mbps. Please verify.',
+                messages: [
+                    { sender: 'student', text: 'Wi-Fi keeps dropping in the main library reading room.', time: '11:12 AM' },
+                    { sender: 'staff', text: 'We found a faulty PoE switch on Floor 2. Replacing it now.', time: '12:05 PM' },
+                    { sender: 'staff', text: 'Router is back online and tested. Please verify the resolution tab!', time: '01:25 PM' }
+                ],
+                audit: [
+                    { time: '11:10 AM', title: 'Student reported problem', desc: 'Ticket #CF-1023 created', done: true },
+                    { time: '11:30 AM', title: 'Assigned to Staff B (ICT)', desc: 'Network diagnostics started', done: true },
+                    { time: '01:25 PM', title: 'Staff marked as Resolved', desc: 'Evidence uploaded · Awaiting reporter verification', done: true }
+                ]
+            },
+            {
+                id: 'CF-1021',
+                title: 'Broken chair',
+                category: 'Furniture',
+                categoryIcon: 'fa-chair',
+                location: 'Room 201 • Academic Building B',
+                priority: 'Low',
+                status: 'Closed',
+                timeAgo: '5 days ago',
+                reportedAt: 'Oct 20, 2024 · 09:00 AM',
+                slaText: 'Verified & Closed',
+                slaTarget: '48 Hours Furniture SLA',
+                slaPercent: 100,
+                slaState: 'done',
+                recurring: false,
+                staffName: 'Staff C (Kamal Uddin)',
+                department: 'Carpentry & Maintenance',
+                resolvedAt: 'Oct 20, 2024, 04:10 PM',
+                description: 'Two wooden student desk chairs in the third row have broken armrests.',
+                thumbImg: 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?auto=format&fit=crop&w=300&q=80',
+                beforeImg: 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?auto=format&fit=crop&w=600&q=80',
+                afterImg: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80',
+                resolutionNote: 'Repaired the wooden joints and replaced both damaged chairs with new classroom seating.',
+                messages: [
+                    { sender: 'student', text: 'Two chairs near the window are broken.', time: '09:05 AM' },
+                    { sender: 'staff', text: 'Chairs have been replaced. Thank you for reporting!', time: '04:10 PM' }
+                ],
+                audit: [
+                    { time: '09:00 AM', title: 'Student reported problem', desc: 'Ticket #CF-1021 created', done: true },
+                    { time: '04:10 PM', title: 'Staff marked as Resolved', desc: 'Chairs replaced in Room 201', done: true },
+                    { time: '04:45 PM', title: 'Student Verified & Closed', desc: 'Confirmed fixed by John Doe', done: true }
+                ]
+            },
+            {
+                id: 'CF-1022',
+                title: 'Water leakage',
+                category: 'Plumbing',
+                categoryIcon: 'fa-droplet',
+                location: 'Lab 2 • Science Building',
+                priority: 'Critical',
+                status: 'In Progress',
+                timeAgo: '1 week ago',
+                reportedAt: 'Oct 18, 2024 · 08:30 AM',
+                slaText: '00h 45m left (Urgent)',
+                slaTarget: '2 Hours Critical SLA',
+                slaPercent: 82,
+                slaState: 'breach',
+                recurring: false,
+                staffName: 'Staff D (Rubel Mia)',
+                department: 'Plumbing Department',
+                resolvedAt: 'Work in progress on site',
+                description: 'Main sink pipe bursts in Chemistry Lab 2 causing water accumulation near the storage cabinets.',
+                thumbImg: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=300&q=80',
+                beforeImg: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=600&q=80',
+                afterImg: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
+                resolutionNote: 'Main valve shut off and new PVC joint fitting is being installed now.',
+                messages: [
+                    { sender: 'student', text: 'Urgent! Water is leaking near the back sink in Lab 2.', time: '08:32 AM' },
+                    { sender: 'staff', text: 'Main water valve is turned off. Replacing the pipe joint right now.', time: '08:50 AM' }
+                ],
+                audit: [
+                    { time: '08:30 AM', title: 'Critical Problem Reported', desc: '2-Hour Critical SLA activated', done: true },
+                    { time: '08:35 AM', title: 'Assigned to Plumbing Team', desc: 'Staff D dispatched immediately', done: true },
+                    { time: '08:50 AM', title: 'Repair in Progress', desc: 'Valve shut off, pipe replacement underway', done: true }
+                ]
+            }
+        ];
+
+        // State Variables
+        let activeFilter = 'All';
+        let searchQuery = '';
+        let selectedTicketId = 'CF-1025';
+        let activeDetailTab = 'chat'; // Default open to Chat / Details so user sees rich UI right away
+
+        // Status & Priority Visual Config
+        const statusConfig = {
+            'Open':        { badge: 'bg-rose-50 text-rose-600 border-rose-200', dot: 'bg-rose-500', barColor: '#f43f5e', step: 2 },
+            'In Progress': { badge: 'bg-blue-50 text-blue-600 border-blue-200', dot: 'bg-blue-500', barColor: '#3b82f6', step: 4 },
+            'Resolved':    { badge: 'bg-emerald-50 text-emerald-600 border-emerald-200', dot: 'bg-emerald-500', barColor: '#10b981', step: 5 },
+            'Closed':      { badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-500', barColor: '#64748b', step: 7 },
+            'Reopened':    { badge: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500', barColor: '#f59e0b', step: 4 }
+        };
+
+        const priorityConfig = {
+            'Low':      'bg-emerald-50 text-emerald-700 border-emerald-200',
+            'Medium':   'bg-amber-50 text-amber-700 border-amber-200',
+            'High':     'bg-rose-50 text-rose-600 border-rose-200',
+            'Critical': 'bg-red-600 text-white border-red-600'
+        };
+
+        const lifecycleSteps = ['Open', 'Triaged', 'Assigned', 'In Progress', 'Resolved', 'Verified', 'Closed'];
+
+        // Render Filter Tabs (Screen 6)
+        function renderFilterTabs() {
+            const filters = ['All', 'Open', 'In Progress', 'Resolved', 'Closed'];
+            const container = document.getElementById('filterTabs');
+
+            container.innerHTML = filters.map(f => {
+                const count = f === 'All'
+                    ? ticketsData.length
+                    : ticketsData.filter(t => (f === 'Open' && (t.status === 'Open' || t.status === 'Reopened')) || t.status === f).length;
+
+                const isActive = activeFilter === f;
+                return `
+                    <button onclick="setFilter('${f}')" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                        isActive
+                            ? 'btn-primary text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-slate-100'
+                    }">
+                        <span>${f}</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] ${isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'}">(${count})</span>
+                    </button>
+                `;
+            }).join('');
+
+            // Update Top Mini Counters
+            document.getElementById('statTotal').textContent = ticketsData.length;
+            document.getElementById('statOpen').textContent = ticketsData.filter(t => t.status === 'Open' || t.status === 'Reopened').length;
+            document.getElementById('statProgress').textContent = ticketsData.filter(t => t.status === 'In Progress').length;
+            document.getElementById('statResolved').textContent = ticketsData.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+            document.getElementById('sidebarTicketCount').textContent = ticketsData.length;
+        }
+
+        // Render Tickets List (Screen 6)
+        function renderTicketsList() {
+            const listEl = document.getElementById('ticketsListContainer');
+            const emptyEl = document.getElementById('emptyTicketsState');
+
+            const filtered = ticketsData.filter(t => {
+                const matchesTab = activeFilter === 'All'
+                    || (activeFilter === 'Open' && (t.status === 'Open' || t.status === 'Reopened'))
+                    || t.status === activeFilter;
+
+                const q = searchQuery.trim().toLowerCase();
+                const matchesSearch = !q || [t.id, t.title, t.location, t.category, t.staffName, t.priority, t.status]
+                    .join(' ').toLowerCase().includes(q);
+
+                return matchesTab && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = filtered.map(t => {
+                const st = statusConfig[t.status] || statusConfig['Open'];
+                const pr = priorityConfig[t.priority];
+                const isSelected = t.id === selectedTicketId;
+
+                return `
+                    <div onclick="selectTicket('${t.id}')" style="--status-color: ${st.barColor}" class="ticket-card p-4 pl-5 cursor-pointer ${isSelected ? 'active-ticket' : ''}">
+                        <div class="flex items-start gap-3.5">
+                            <!-- Problem Thumbnail Image -->
+                            <img src="${t.thumbImg}" alt="${t.title}" class="w-16 h-16 rounded-xl object-cover shrink-0 border border-slate-200/80 shadow-sm">
+                            
+                            <!-- Main Info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="text-[11px] font-extrabold text-indigo-600 tracking-wide">#${t.id}</span>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${st.badge} flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full ${st.dot}"></span>
+                                        ${t.status}
+                                    </span>
+                                </div>
+
+                                <h3 class="text-sm font-extrabold text-slate-900 truncate">${t.title}</h3>
+                                <p class="text-xs font-medium text-slate-500 truncate mt-0.5">
+                                    <i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${t.location}
+                                </p>
+
+                                <!-- Bottom Row: Priority, SLA Bar & Time -->
+                                <div class="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-slate-100">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${pr}">${t.priority}</span>
+                                        <span class="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                                            <i class="fa-regular fa-clock text-indigo-400"></i> ${t.slaText}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs font-bold text-slate-400">
+                                        <span>${t.timeAgo}</span>
+                                        <i class="fa-solid fa-chevron-right text-[10px] text-indigo-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Selected Ticket Details (Screens 7 & 8)
+        function renderTicketDetail() {
+            const ticket = ticketsData.find(t => t.id === selectedTicketId) || ticketsData[0];
+            const st = statusConfig[ticket.status] || statusConfig['Open'];
+            const pr = priorityConfig[ticket.priority];
+
+            // Header Info
+            document.getElementById('detailTicketId').textContent = `Ticket #${ticket.id}`;
+            document.getElementById('detailTitle').textContent = ticket.title;
+            document.getElementById('detailLocation').innerHTML = `<i class="fa-solid fa-location-dot text-indigo-500"></i><span>${ticket.location}</span>`;
+            document.getElementById('detailCategoryChip').innerHTML = `<i class="fa-solid ${ticket.categoryIcon} mr-1 text-indigo-500"></i>${ticket.category}`;
+            document.getElementById('detailSlaText').textContent = `SLA: ${ticket.slaText}`;
+
+            const recBadge = document.getElementById('detailRecurringBadge');
+            if (ticket.recurring) {
+                recBadge.classList.remove('hidden');
+                recBadge.classList.add('inline-flex');
+            } else {
+                recBadge.classList.add('hidden');
+            }
+
+            const statusBadgeEl = document.getElementById('detailStatusBadge');
+            statusBadgeEl.className = `inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold border ${st.badge}`;
+            statusBadgeEl.innerHTML = `<span class="w-2 h-2 rounded-full ${st.dot}"></span>${ticket.status}`;
+
+            const prioBadgeEl = document.getElementById('detailPriorityBadge');
+            prioBadgeEl.className = `inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold border ${pr}`;
+            prioBadgeEl.textContent = `${ticket.priority} Priority`;
+
+            // 7-Step Lifecycle Stepper
+            const currentStep = st.step;
+            document.getElementById('lifecycleProgressLabel').textContent = `Step ${currentStep} of 7 · ${ticket.status}`;
+            document.getElementById('lifecycleStepper').innerHTML = lifecycleSteps.map((stepName, idx) => {
+                const stepNum = idx + 1;
+                const isCompleted = stepNum <= currentStep;
+                const isCurrent = stepNum === currentStep;
+                return `
+                    <div class="flex flex-col items-center">
+                        <div class="w-full h-1.5 rounded-full mb-1.5 transition-all ${
+                            isCompleted ? 'bg-gradient-to-r from-indigo-500 to-cyan-400' : 'bg-slate-100'
+                        }"></div>
+                        <span class="text-[10px] font-bold truncate max-w-full ${
+                            isCurrent ? 'text-indigo-600 font-extrabold' : isCompleted ? 'text-slate-700' : 'text-slate-400'
+                        }">${stepName}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Tab 1: Details Pane
+            document.getElementById('detailDescription').textContent = ticket.description;
+            document.getElementById('detailStaffName').textContent = ticket.staffName;
+            document.getElementById('detailDepartment').textContent = ticket.department;
+            document.getElementById('detailReportedAt').textContent = ticket.reportedAt;
+            document.getElementById('detailSlaTarget').textContent = ticket.slaTarget;
+            document.getElementById('detailAttachmentImg').src = ticket.beforeImg;
+
+            // Tab 2: Chat Pane
+            document.getElementById('chatHeaderStaff').textContent = `${ticket.staffName} · ${ticket.department}`;
+            document.getElementById('chatStaffAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(ticket.staffName)}&background=4f46e5&color=fff`;
+            renderChatMessages(ticket);
+
+            // Tab 3: Updates / Audit Trail Pane
+            document.getElementById('auditTimelineList').innerHTML = ticket.audit.map((item, idx) => `
+                <li class="ml-6 relative">
+                    <span class="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-white border-[3px] ${
+                        idx === ticket.audit.length - 1 ? 'border-emerald-500' : 'border-indigo-500'
+                    } shadow-sm"></span>
+                    <span class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">${item.time}</span>
+                    <h4 class="text-sm font-extrabold text-slate-900 mt-0.5">${item.title}</h4>
+                    <p class="text-xs text-slate-500 mt-0.5">${item.desc}</p>
+                </li>
+            `).join('');
+
+            // Tab 4: Resolution & Verification Pane (Screen 8)
+            document.getElementById('resStaffInfo').innerHTML = `<i class="fa-solid fa-user-check text-indigo-600"></i><span>${ticket.staffName} (${ticket.department})</span>`;
+            document.getElementById('resTimeInfo').innerHTML = `<i class="fa-regular fa-clock text-indigo-600"></i><span>${ticket.resolvedAt}</span>`;
+            document.getElementById('resBeforeImg').src = ticket.beforeImg;
+            document.getElementById('resAfterImg').src = ticket.afterImg;
+            document.getElementById('resNoteBox').textContent = ticket.resolutionNote;
+
+            // Reset feedback banner when switching tickets
+            const feedbackBanner = document.getElementById('verificationFeedbackBanner');
+            feedbackBanner.classList.add('hidden');
+            feedbackBanner.classList.remove('flex');
+        }
+
+        // Render Chat Messages (Screen 7)
+        function renderChatMessages(ticket) {
+            const container = document.getElementById('chatMessagesContainer');
+            container.innerHTML = ticket.messages.map(m => {
+                const isStudent = m.sender === 'student';
+
+                // Note: In Prototype Screen 7, student's reported messages & photo are on the left with student avatar, and staff replies are on the right, OR standard chat layout. Let's render clear avatars & sender badges!
+                if (m.image) {
+                    return `
+                        <div class="flex items-end gap-3 ${isStudent ? 'justify-start' : 'justify-end'}">
+                            ${isStudent ? `<img src="https://ui-avatars.com/api/?name=John+Doe&background=EEF2FF&color=4F46E5" class="w-8 h-8 rounded-full shadow-sm shrink-0" alt="Student">` : ''}
+                            <div class="max-w-xs sm:max-w-sm">
+                                <div class="p-2 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                                    <img src="${m.image}" alt="Attached Evidence" class="w-full h-36 object-cover rounded-xl">
+                                    <div class="flex items-center justify-between px-2 pt-2 pb-1 text-[11px] text-slate-500 font-semibold">
+                                        <span><i class="fa-regular fa-image text-indigo-500 mr-1"></i>${m.caption || 'photo-evidence.jpg'}</span>
+                                        <span>${m.time}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="flex items-end gap-3 ${isStudent ? 'justify-start' : 'justify-end'}">
+                        ${isStudent ? `<img src="https://ui-avatars.com/api/?name=John+Doe&background=EEF2FF&color=4F46E5" class="w-8 h-8 rounded-full shadow-sm shrink-0" alt="Student">` : ''}
+                        <div class="max-w-[78%]">
+                            <div class="px-4 py-3 text-xs md:text-sm font-medium leading-relaxed ${isStudent ? 'bubble-in' : 'bubble-out'}">
+                                ${m.text}
+                            </div>
+                            <span class="block text-[10px] font-semibold text-slate-400 mt-1 px-1 ${isStudent ? 'text-left' : 'text-right'}">
+                                ${isStudent ? 'You (Reporter)' : ticket.staffName} · ${m.time}
+                            </span>
+                        </div>
+                        ${!isStudent ? `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(ticket.staffName)}&background=4f46e5&color=fff" class="w-8 h-8 rounded-full shadow-sm shrink-0" alt="Staff">` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Send Chat Message Handler
+        function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendMessage({ sender: 'student', text, time: getCurrentTime() });
+            input.value = '';
+
+            // Simulate Real-time Staff Reply
+            setTimeout(() => {
+                appendMessage({
+                    sender: 'staff',
+                    text: 'Got your update! I am checking this right now and will update the resolution tab once completed.',
+                    time: getCurrentTime()
+                });
+            }, 900);
+        }
+
+        function sendQuickReply(text) {
+            appendMessage({ sender: 'student', text, time: getCurrentTime() });
+            setTimeout(() => {
+                appendMessage({
+                    sender: 'staff',
+                    text: 'Yes, I am at the building now with the replacement parts. Will be done shortly!',
+                    time: getCurrentTime()
+                });
+            }, 850);
+        }
+
+        function sendSimulatedPhoto() {
+            appendMessage({
+                sender: 'student',
+                image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=500&q=80',
+                caption: 'closer-equipment-view.jpg',
+                time: getCurrentTime()
+            });
+        }
+
+        function appendMessage(msgObj) {
+            const ticket = ticketsData.find(t => t.id === selectedTicketId);
+            if (!ticket) return;
+            ticket.messages.push(msgObj);
+            renderChatMessages(ticket);
+        }
+
+        function getCurrentTime() {
+            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Handle Resolution Verification (Screen 8: Yes, Verified / No, Reopen)
+        function handleVerification(isVerified) {
+            const ticket = ticketsData.find(t => t.id === selectedTicketId);
+            if (!ticket) return;
+
+            const feedbackBanner = document.getElementById('verificationFeedbackBanner');
+            feedbackBanner.classList.remove('hidden');
+            feedbackBanner.classList.add('flex');
+
+            if (isVerified) {
+                ticket.status = 'Closed';
+                ticket.slaText = 'Verified & Closed';
+                ticket.audit.push({
+                    time: getCurrentTime(),
+                    title: 'Reporter Verified & Closed Ticket',
+                    desc: 'Student confirmed the issue is resolved satisfactorily.',
+                    done: true
+                });
+                feedbackBanner.className = 'mt-4 p-4 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs md:text-sm font-bold flex items-center justify-between gap-3';
+                feedbackBanner.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                        <span>Awesome! Ticket #${ticket.id} has been marked as <b>Verified & Closed</b>.</span>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[11px]">Closed</span>
+                `;
+            } else {
+                ticket.status = 'Reopened';
+                ticket.slaText = 'SLA Restarted · 4h left';
+                ticket.audit.push({
+                    time: getCurrentTime(),
+                    title: 'Reporter Rejected Resolution (Reopened)',
+                    desc: 'Issue not fixed. Assigned staff notified to resume work immediately.',
+                    done: true
+                });
+                feedbackBanner.className = 'mt-4 p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-800 text-xs md:text-sm font-bold flex items-center justify-between gap-3';
+                feedbackBanner.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-rotate-left text-rose-600 text-lg"></i>
+                        <span>Ticket #${ticket.id} has been <b>Reopened</b> and assigned staff has been notified!</span>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[11px]">Reopened</span>
+                `;
+            }
+
+            renderFilterTabs();
+            renderTicketsList();
+            renderTicketDetail();
+            // Keep banner visible after re-render
+            feedbackBanner.classList.remove('hidden');
+            feedbackBanner.classList.add('flex');
+        }
+
+        // Tab Switching (Details | Chat | Updates | Resolution)
+        function switchDetailTab(tabName) {
+            activeDetailTab = tabName;
+            const tabs = ['details', 'chat', 'updates', 'resolution'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tabBtn-${t}`);
+                const pane = document.getElementById(`tabPane-${t}`);
+                if (t === tabName) {
+                    btn.className = 'detail-tab-btn px-4 py-3 text-xs md:text-sm font-extrabold border-b-2 border-indigo-600 text-indigo-600 transition-all whitespace-nowrap flex items-center gap-2';
+                    pane.classList.remove('hidden');
+                } else {
+                    btn.className = 'detail-tab-btn px-4 py-3 text-xs md:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-700 transition-all whitespace-nowrap flex items-center gap-2';
+                    pane.classList.add('hidden');
+                }
+            });
+        }
+
+        // Select Ticket from List
+        function selectTicket(id) {
+            selectedTicketId = id;
+            renderTicketsList();
+            renderTicketDetail();
+
+            // If ticket is Resolved, automatically highlight Resolution tab if user wants, or keep current tab
+            if (window.innerWidth < 1024) {
+                document.getElementById('ticketDetailSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function setFilter(filterName) {
+            activeFilter = filterName;
+            renderFilterTabs();
+            renderTicketsList();
+        }
+
+        function showMobileListView() {
+            document.getElementById('ticketsListSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Search Input Listener
+        document.getElementById('globalSearchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderTicketsList();
+        });
+
+        // Initial Boot
+        renderFilterTabs();
+        renderTicketsList();
+        renderTicketDetail();
+        switchDetailTab('chat');
+    </script>
+</body>
+</html>

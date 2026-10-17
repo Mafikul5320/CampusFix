@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFix - Role-Based Operations Dashboard</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+                    },
+                    colors: {
+                        ink: '#050816'
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+
+        /* Signature CampusFix Gradients & Surfaces */
+        .text-gradient {
+            background-image: linear-gradient(100deg, #a5b4fc 0%, #60a5fa 45%, #22d3ee 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .text-gradient-dark {
+            background-image: linear-gradient(100deg, #4f46e5 0%, #2563eb 50%, #0891b2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background-image: linear-gradient(135deg, #6366f1, #3b82f6 60%, #06b6d4);
+            box-shadow: 0 10px 25px -8px rgba(79, 70, 229, .6), inset 0 1px 0 rgba(255, 255, 255, .35);
+            transition: transform .22s ease, box-shadow .22s ease, filter .22s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.06);
+            box-shadow: 0 16px 32px -8px rgba(79, 70, 229, .78), inset 0 1px 0 rgba(255, 255, 255, .4);
+        }
+
+        .dash-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 50px -28px rgba(15, 23, 42, 0.12);
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+        .dash-card:hover {
+            border-color: rgba(199, 210, 254, 0.95);
+            box-shadow: 0 28px 60px -28px rgba(79, 70, 229, 0.2);
+        }
+
+        /* Conic Donut Chart for Admin Category Analytics (Screen 4) */
+        .donut-chart {
+            background: conic-gradient(
+                #6366f1 0% 28%,    /* Electrical 28% */
+                #0ea5e9 28% 48%,   /* IT / Network 20% */
+                #10b981 48% 67%,   /* Cleaning 19% */
+                #f59e0b 67% 79%,   /* Plumbing 12% */
+                #8b5cf6 79% 89%,   /* Classroom 10% */
+                #cbd5e1 89% 100%   /* Others 11% */
+            );
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-view { animation: fadeIn 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+        @keyframes ping-soft {
+            0% { transform: scale(1); opacity: .75; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+        .ping-soft { animation: ping-soft 1.8s cubic-bezier(0, 0, .2, 1) infinite; }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#F3F4F6] text-slate-800 h-screen overflow-hidden flex selection:bg-indigo-500 selection:text-white">
+
+    <!-- ===================== SIDEBAR (Dynamic Role-Based Navigation) ===================== -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200/80 flex-col hidden lg:flex z-30 shadow-sm h-full shrink-0">
+        <!-- Brand Logo -->
+        <div class="h-20 flex items-center justify-between px-6 border-b border-slate-100">
+            <a href="#" class="flex items-center gap-3">
+                <div class="w-9 h-9 text-white flex items-center justify-center rounded-xl font-bold text-lg btn-primary">
+                    <i class="fa-solid fa-c"></i>
+                </div>
+                <span class="text-xl font-extrabold text-slate-900 tracking-tight">Campus<span class="text-gradient-dark">Fix</span></span>
+            </a>
+            <span id="sidebarRoleTag" class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                Student
+            </span>
+        </div>
+
+        <!-- RBAC Access Scope Indicator -->
+        <div class="mx-4 mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                <span><i class="fa-solid fa-shield-halved text-indigo-500 mr-1"></i>RBAC Scope</span>
+                <span class="text-emerald-600">Active</span>
+            </div>
+            <p id="rbacScopeText" class="text-xs font-extrabold text-slate-800">Student → Own Tickets Only</p>
+        </div>
+
+        <!-- Dynamic Navigation Links -->
+        <nav id="sidebarNav" class="flex-1 overflow-y-auto py-4 px-4 space-y-1.5">
+            <!-- Populated dynamically based on selected role -->
+        </nav>
+
+        <!-- SLA & Escalation Rule Quick Reference -->
+        <div class="p-4 m-4 rounded-2xl bg-ink text-white relative overflow-hidden shadow-lg">
+            <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-indigo-500/30 blur-xl pointer-events-none"></div>
+            <div class="flex items-center justify-between text-[11px] font-bold text-indigo-300 uppercase tracking-wider mb-2">
+                <span><i class="fa-solid fa-stopwatch mr-1"></i>SLA Rules</span>
+                <span class="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-cyan-300">Auto-Escalate</span>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                <div class="bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/10 flex justify-between">
+                    <span class="text-slate-300">Critical</span><b class="text-rose-400">2h</b>
+                </div>
+                <div class="bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/10 flex justify-between">
+                    <span class="text-slate-300">Cleaning</span><b class="text-amber-300">4h</b>
+                </div>
+                <div class="bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/10 flex justify-between">
+                    <span class="text-slate-300">Plumbing</span><b class="text-sky-300">8h</b>
+                </div>
+                <div class="bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/10 flex justify-between">
+                    <span class="text-slate-300">IT / Net</span><b class="text-emerald-300">24h</b>
+                </div>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-2.5 leading-snug">
+                Escalation: <b class="text-white">Staff → Manager → Admin</b>
+            </p>
+        </div>
+    </aside>
+
+    <!-- ===================== MAIN CONTENT AREA ===================== -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+        <!-- Ambient Background Glows -->
+        <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-200/35 blur-[110px] pointer-events-none -z-10"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-cyan-200/30 blur-[110px] pointer-events-none -z-10"></div>
+
+        <!-- ===================== TOP HEADER WITH ROLE SWITCHER ===================== -->
+        <header class="min-h-[5rem] py-3 bg-white/85 backdrop-blur-md border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-4 px-4 md:px-8 z-20 shrink-0">
+            
+            <!-- Left: Search Input -->
+            <div class="flex items-center gap-3 flex-1 min-w-[220px] max-w-md">
+                <div class="relative w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input id="dashSearch" type="text" placeholder="Search tickets (#CF-1025), rooms, assets or staff..." class="w-full bg-slate-100/90 border border-transparent focus:border-indigo-300 rounded-full py-2.5 pl-11 pr-4 text-xs md:text-sm font-medium text-slate-800 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all outline-none">
+                </div>
+            </div>
+
+            <!-- Center/Right: Interactive RBAC Role Switcher Pills -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 hidden xl:inline mr-1">
+                    <i class="fa-solid fa-users-gear text-indigo-500 mr-1"></i>Switch Role:
+                </span>
+                <div class="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200/80 gap-1" role="group" aria-label="Role Switcher">
+                    <button onclick="switchRole('student')" id="roleBtn-student" class="role-btn px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-graduate"></i><span>Student / Teacher</span>
+                    </button>
+                    <button onclick="switchRole('staff')" id="roleBtn-staff" class="role-btn px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-screwdriver-wrench"></i><span>Staff</span>
+                    </button>
+                    <button onclick="switchRole('manager')" id="roleBtn-manager" class="role-btn px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-tie"></i><span>Manager</span>
+                    </button>
+                    <button onclick="switchRole('admin')" id="roleBtn-admin" class="role-btn px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-shield"></i><span>Admin</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Notification & Active User Profile -->
+            <div class="flex items-center gap-3">
+                <button onclick="openToast('3 new SLA & status notifications loaded.')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 transition-colors relative flex items-center justify-center">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                    <span class="absolute top-2 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+                </button>
+
+                <div class="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=John+Doe&background=4F46E5&color=fff&bold=true" class="w-9 h-9 rounded-full shadow-sm border-2 border-white" alt="User">
+                    <div class="hidden sm:block leading-tight">
+                        <p id="headerUserName" class="text-xs font-extrabold text-slate-900">John Doe</p>
+                        <p id="headerUserRole" class="text-[11px] font-semibold text-indigo-600">Student · CSE</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===================== SCROLLABLE DASHBOARD WORKSPACE ===================== -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
+            <div class="max-w-7xl mx-auto space-y-8">
+
+                <!-- Dynamic Role Welcome Banner & RBAC Permission Bar -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                            <span id="rolePermissionChip" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                <i class="fa-solid fa-lock-open"></i> RBAC: Own Reported Tickets
+                            </span>
+                            <span id="roleDeptChip" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
+                                <i class="fa-solid fa-building-columns"></i> Academic Building A &amp; B
+                            </span>
+                        </div>
+                        <h1 id="welcomeHeading" class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+                            Welcome Back, John Doe 👋
+                        </h1>
+                        <p id="welcomeSubtext" class="text-sm text-slate-500 mt-1">
+                            Here's an overview of your reported problems, live technician chats, and pending verifications.
+                        </p>
+                    </div>
+
+                    <div id="rolePrimaryActionArea" class="flex flex-wrap items-center gap-3 shrink-0">
+                        <!-- Dynamic primary CTA button per role -->
+                    </div>
+                </div>
+
+                <!-- ======================================================================= -->
+                <!-- 1. STUDENT / TEACHER DASHBOARD VIEW (Prototype Screen 3 + Screen 8)     -->
+                <!-- ======================================================================= -->
+                <section id="view-student" class="space-y-8 animate-view">
+                    
+                    <!-- 4 KPI Summary Cards (Screen 3) -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="dash-card p-6 flex items-center gap-4">
+                            <div class="w-13 h-13 w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-ticket"></i>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-extrabold text-slate-900 tabular-nums" id="stuStatTotal">5</p>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Total Tickets</p>
+                            </div>
+                        </div>
+
+                        <div class="dash-card p-6 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-extrabold text-slate-900 tabular-nums" id="stuStatOpen">1</p>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Open</p>
+                            </div>
+                        </div>
+
+                        <div class="dash-card p-6 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-screwdriver-wrench"></i>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-extrabold text-slate-900 tabular-nums" id="stuStatProgress">2</p>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">In Progress</p>
+                            </div>
+                        </div>
+
+                        <div class="dash-card p-6 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-extrabold text-slate-900 tabular-nums" id="stuStatResolved">2</p>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Resolved / Closed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Duplicate Problem Detection Alert Banner (Requirement 5.12) -->
+                    <div class="rounded-3xl bg-gradient-to-r from-indigo-50 via-sky-50 to-white border border-indigo-200/80 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shrink-0 mt-0.5 shadow-md shadow-indigo-500/20">
+                                <i class="fa-solid fa-clone"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600">Smart Duplicate Detection</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">Room 402 · Wi-Fi</span>
+                                </div>
+                                <h3 class="text-sm font-extrabold text-slate-900 mt-0.5">A similar problem has already been reported in Room 402 ("Wi-Fi not working").</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Instead of creating a duplicate ticket, you can join existing Ticket <b>#CF-1034</b> (+4 affected students already subscribed for live updates).</p>
+                            </div>
+                        </div>
+                        <button onclick="openToast('You have been linked to Ticket #CF-1034 (+5 affected users)!')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-indigo-600 text-indigo-600 hover:text-white border border-indigo-200 text-xs font-extrabold transition shadow-sm shrink-0">
+                            <i class="fa-solid fa-user-plus mr-1.5"></i>Join Existing Ticket
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <!-- Left 7 Cols: Recent Tickets List (Screen 3) -->
+                        <div class="lg:col-span-7 dash-card overflow-hidden">
+                            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-extrabold text-slate-900">Recent Tickets</h2>
+                                    <p class="text-xs text-slate-400">Click any ticket to track progress, chat with staff, or verify resolution</p>
+                                </div>
+                                <span class="text-xs font-extrabold text-indigo-600">View All (5)</span>
+                            </div>
+
+                            <div id="studentTicketsList" class="divide-y divide-slate-100">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Right 5 Cols: Resolution Verification & Live Tracker Card (Screen 8) -->
+                        <div class="lg:col-span-5 dash-card p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                                <div>
+                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 block">Action Required · Step 05</span>
+                                    <h3 class="text-base font-extrabold text-slate-900" id="stuVerifyTicketTitle">Ticket #CF-1025 · Resolution Verification</h3>
+                                </div>
+                                <span id="stuVerifyBadge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                    Resolved
+                                </span>
+                            </div>
+
+                            <!-- Staff Resolution Info -->
+                            <div class="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase text-slate-400 block">Resolved By</span>
+                                    <b class="text-slate-800 mt-0.5 block"><i class="fa-solid fa-user-gear text-indigo-500 mr-1"></i>Staff A (ICT Dept)</b>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase text-slate-400 block">Resolved At</span>
+                                    <b class="text-slate-800 mt-0.5 block"><i class="fa-regular fa-clock text-indigo-500 mr-1"></i>2:30 PM (In 3h 15m)</b>
+                                </div>
+                            </div>
+
+                            <!-- Before / After Evidence Photos (Screen 8) -->
+                            <div class="grid grid-cols-11 gap-2 items-center">
+                                <div class="col-span-5">
+                                    <span class="text-[11px] font-bold text-slate-600 block mb-1.5">Before Image</span>
+                                    <div class="rounded-xl overflow-hidden border border-slate-200 relative">
+                                        <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=400&q=80" class="w-full h-24 object-cover" alt="Before">
+                                        <span class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded text-[9px] font-extrabold bg-rose-600/90 text-white">Reported</span>
+                                    </div>
+                                </div>
+                                <div class="col-span-1 flex justify-center text-indigo-500">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </div>
+                                <div class="col-span-5">
+                                    <span class="text-[11px] font-bold text-slate-600 block mb-1.5">After Image</span>
+                                    <div class="rounded-xl overflow-hidden border border-emerald-300 relative">
+                                        <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80" class="w-full h-24 object-cover" alt="After">
+                                        <span class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-600/90 text-white">Fixed</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-600 block mb-1">Staff Resolution Note</span>
+                                <p class="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100 text-xs font-medium text-slate-700">
+                                    "Replaced the faulty power cable and tested HDMI signal. Projector is now working properly."
+                                </p>
+                            </div>
+
+                            <!-- Yes, Verified / No, Reopen Buttons -->
+                            <div class="pt-2 border-t border-slate-100">
+                                <p class="text-xs font-extrabold text-slate-900 mb-3">Verify the Resolution: Is the problem solved?</p>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button onclick="studentVerifyTicket(true)" class="py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 transition flex items-center justify-center gap-1.5">
+                                        <span>Yes, Verified</span>
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                    <button onclick="studentVerifyTicket(false)" class="py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-extrabold text-xs transition flex items-center justify-center gap-1.5">
+                                        <span>No, Reopen</span>
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================================================= -->
+                <!-- 2. MAINTENANCE STAFF DASHBOARD VIEW (Requirement 4 & 5.8, 5.9)          -->
+                <!-- ======================================================================= -->
+                <section id="view-staff" class="space-y-8 hidden animate-view">
+                    
+                    <!-- Staff KPIs -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="dash-card p-6">
+                            <span class="text-xs font-bold text-slate-400 uppercase">My Assigned Queue</span>
+                            <p class="text-3xl font-extrabold text-slate-900 mt-1">04 <span class="text-xs font-bold text-indigo-600">Tickets</span></p>
+                        </div>
+                        <div class="dash-card p-6">
+                            <span class="text-xs font-bold text-slate-400 uppercase">SLA Warning (&lt; 1 hr)</span>
+                            <p class="text-3xl font-extrabold text-amber-600 mt-1">01 <span class="text-xs font-bold text-amber-600">Urgent</span></p>
+                        </div>
+                        <div class="dash-card p-6">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Awaiting Student Verify</span>
+                            <p class="text-3xl font-extrabold text-teal-600 mt-1">02 <span class="text-xs font-bold text-teal-600">Resolved</span></p>
+                        </div>
+                        <div class="dash-card p-6">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Avg Resolution Time</span>
+                            <p class="text-3xl font-extrabold text-emerald-600 mt-1">2.8 <span class="text-xs font-bold text-slate-500">Hours</span></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <!-- Assigned Tasks Queue -->
+                        <div class="lg:col-span-7 dash-card overflow-hidden">
+                            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-extrabold text-slate-900">Assigned Maintenance Queue</h2>
+                                    <p class="text-xs text-slate-400">Accept tasks, update status, and monitor SLA deadlines</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-600">ICT Department</span>
+                            </div>
+
+                            <div class="divide-y divide-slate-100" id="staffTaskQueue">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Staff Evidence Submission & Status Update Card -->
+                        <div class="lg:col-span-5 dash-card p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                                <div>
+                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 block">Staff Workbench</span>
+                                    <h3 class="text-base font-extrabold text-slate-900">Submit Resolution &amp; Evidence</h3>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                    #CF-1025
+                                </span>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-extrabold text-slate-700 block mb-1.5">Update Ticket Status</label>
+                                    <select id="staffStatusSelect" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                        <option value="In Progress">In Progress (Technician on site)</option>
+                                        <option value="Resolved" selected>Resolved (Send for Student Verification)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-extrabold text-slate-700 block mb-1.5">Resolution Details / Note *</label>
+                                    <textarea id="staffResNote" rows="3" class="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-800 outline-none focus:border-indigo-500" placeholder="Describe what was repaired or replaced...">Replaced power cable and tested HDMI signal in Room 304.</textarea>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-extrabold text-slate-700 block mb-1.5">Upload "After Repair" Evidence Photo *</label>
+                                    <div onclick="openToast('Evidence photo after-projector-fix.jpg attached!')" class="border-2 border-dashed border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50 rounded-2xl p-4 text-center cursor-pointer transition">
+                                        <i class="fa-solid fa-camera text-indigo-500 text-lg mb-1"></i>
+                                        <p class="text-xs font-extrabold text-indigo-700">Click to attach After Repair Photo</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">Required before marking ticket as Resolved</p>
+                                    </div>
+                                </div>
+
+                                <button onclick="staffSubmitResolution()" class="w-full py-3.5 rounded-xl btn-primary text-white font-extrabold text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    <span>Mark as Resolved &amp; Request Verification</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================================================= -->
+                <!-- 3. DEPARTMENT MANAGER VIEW (Prototype Screen 9 + SLA Escalation)        -->
+                <!-- ======================================================================= -->
+                <section id="view-manager" class="space-y-8 hidden animate-view">
+                    
+                    <!-- SLA Breach & Auto-Escalation Alert Banner (Requirement 5.7) -->
+                    <div class="rounded-3xl bg-gradient-to-r from-rose-600 via-red-600 to-orange-500 text-white p-6 shadow-xl relative overflow-hidden">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-2xl shrink-0">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-white text-rose-600">Automatic SLA Escalation</span>
+                                        <span class="text-xs font-bold text-rose-100">Workflow: Staff → Department Manager → Admin</span>
+                                    </div>
+                                    <h3 class="text-lg font-extrabold mt-1">Ticket #CF-1032 (Main switchboard sparking) is nearing 2-Hour Critical SLA Breach!</h3>
+                                    <p class="text-xs text-rose-100 mt-0.5">Only 00:24:10 remaining. Reassign backup technician or escalate priority immediately.</p>
+                                </div>
+                            </div>
+                            <button onclick="openToast('Backup Staff assigned & Priority escalated for #CF-1032!')" class="px-5 py-3 rounded-xl bg-white text-rose-600 font-extrabold text-xs shadow-lg hover:bg-rose-50 transition shrink-0">
+                                Escalate &amp; Reassign Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        
+                        <!-- Left 5 Cols: Manager Ticket Assignment Card (Exact Prototype Screen 9) -->
+                        <div class="lg:col-span-5 dash-card p-6 space-y-5">
+                            <div>
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600">Smart Routing &amp; Dispatch</span>
+                                <h2 class="text-xl font-extrabold text-slate-900 mt-0.5">Assign Staff</h2>
+                                <p class="text-xs text-slate-400">Assign a staff member to handle this ticket based on real-time workload</p>
+                            </div>
+
+                            <!-- Ticket Information Preview Box (Screen 9) -->
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2.5">Ticket Information</span>
+                                <div class="flex items-start gap-3.5">
+                                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=240&q=80" class="w-20 h-20 rounded-xl object-cover border border-slate-200 shrink-0" alt="Ticket">
+                                    <div>
+                                        <span class="text-xs font-extrabold text-indigo-600" id="mgrSelectedTicketId">#CF-1025</span>
+                                        <h4 class="text-sm font-extrabold text-slate-900 mt-0.5" id="mgrSelectedTicketTitle">Projector not working</h4>
+                                        <p class="text-xs text-slate-500 mt-0.5" id="mgrSelectedTicketLoc">Room 304 • Academic Building A</p>
+                                        <span class="inline-block mt-2 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-50 text-rose-600 border border-rose-200" id="mgrSelectedTicketPrio">
+                                            High Priority
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Department & Staff Selector (Screen 9) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-extrabold text-slate-700 block mb-1.5">Department (Smart Suggested)</label>
+                                    <select id="mgrDeptSelect" class="w-full rounded-xl border border-indigo-200 bg-indigo-50/40 px-3.5 py-2.5 text-xs font-extrabold text-indigo-900 outline-none">
+                                        <option value="ICT Department" selected>ICT Department (Auto-Routed)</option>
+                                        <option value="Electrical Department">Electrical Department</option>
+                                        <option value="Plumbing Department">Plumbing Department</option>
+                                        <option value="Cleaning & Maintenance">Cleaning &amp; Maintenance</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-extrabold text-slate-700 block mb-1.5">Assign To Staff Member</label>
+                                    <select id="mgrStaffSelect" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                        <option value="Staff A (Masud · 2 active)">Staff A — Masud (2 active · Recommended)</option>
+                                        <option value="Staff B (Tanvir · 4 active)">Staff B — Tanvir (4 active)</option>
+                                        <option value="Staff C (Kamal · 1 active)">Staff C — Kamal (1 active)</option>
+                                        <option value="Staff D (Rubel · 5 active)">Staff D — Rubel (5 active · High Load)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Staff Workload Visualizer (Requirement 5.4 & 5.16) -->
+                            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2.5">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Department Staff Workload</span>
+                                <div class="space-y-2 text-xs">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-bold text-slate-700 w-28 truncate">Staff A (Masud)</span>
+                                        <div class="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden"><div class="h-full w-[35%] bg-emerald-500 rounded-full"></div></div>
+                                        <span class="text-[11px] font-extrabold text-emerald-600">2 tickets</span>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-bold text-slate-700 w-28 truncate">Staff B (Tanvir)</span>
+                                        <div class="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden"><div class="h-full w-[65%] bg-amber-500 rounded-full"></div></div>
+                                        <span class="text-[11px] font-extrabold text-amber-600">4 tickets</span>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-bold text-slate-700 w-28 truncate">Staff D (Rubel)</span>
+                                        <div class="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden"><div class="h-full w-[88%] bg-rose-500 rounded-full"></div></div>
+                                        <span class="text-[11px] font-extrabold text-rose-600">5 tickets</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="managerAssignTicket()" class="w-full py-3.5 rounded-xl btn-primary text-white font-extrabold text-xs shadow-lg">
+                                Assign Ticket &amp; Start SLA Timer
+                            </button>
+                        </div>
+
+                        <!-- Right 7 Cols: Department Tickets & SLA Monitor -->
+                        <div class="lg:col-span-7 dash-card overflow-hidden">
+                            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-extrabold text-slate-900">Department Tickets &amp; SLA Monitor</h2>
+                                    <p class="text-xs text-slate-400">Click "Select" on any ticket to assign or reassign staff</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-600">All Dept Tickets</span>
+                            </div>
+
+                            <div class="divide-y divide-slate-100" id="managerTicketsList">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- ======================================================================= -->
+                <!-- 4. SYSTEM ADMIN DASHBOARD VIEW (Prototype Screens 4, 10 & 11)           -->
+                <!-- ======================================================================= -->
+                <section id="view-admin" class="space-y-8 hidden animate-view">
+                    
+                    <!-- System Overview & Analytics KPIs (Combined Screen 4 & Screen 11) -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                        <div class="dash-card p-4 lg:col-span-2 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase">Total Tickets</span>
+                                <p class="text-3xl font-extrabold text-slate-900 mt-0.5 tabular-nums">248</p>
+                                <span class="text-[11px] font-extrabold text-emerald-600">+12% vs last 30d</span>
+                            </div>
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg"><i class="fa-solid fa-layer-group"></i></div>
+                        </div>
+
+                        <div class="dash-card p-4 lg:col-span-2 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase">Open / In Progress</span>
+                                <p class="text-3xl font-extrabold text-slate-900 mt-0.5 tabular-nums">65 <span class="text-lg text-blue-600">/ 112</span></p>
+                                <span class="text-[11px] font-extrabold text-amber-600">04 Critical SLA Active</span>
+                            </div>
+                            <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg"><i class="fa-solid fa-stopwatch"></i></div>
+                        </div>
+
+                        <div class="dash-card p-4 lg:col-span-2 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase">Avg Response / Fix</span>
+                                <p class="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">3.5h <span class="text-sm text-slate-400">/ 12.6h</span></p>
+                                <span class="text-[11px] font-extrabold text-indigo-600">Within Campus SLA</span>
+                            </div>
+                            <div class="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg"><i class="fa-solid fa-bolt"></i></div>
+                        </div>
+
+                        <div class="dash-card p-4 lg:col-span-2 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase">Resolution Rate</span>
+                                <p class="text-3xl font-extrabold text-emerald-600 mt-0.5 tabular-nums">92%</p>
+                                <span class="text-[11px] font-extrabold text-emerald-700">71 Verified This Month</span>
+                            </div>
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-shield-check"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row: Tickets by Category (Donut) & Tickets by Status (Bar) (Screen 4) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- Tickets by Category (Screen 4 Donut Chart) -->
+                        <div class="lg:col-span-6 dash-card p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-slate-900">Tickets by Category</h3>
+                                    <p class="text-xs text-slate-400">Distribution across university maintenance departments</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">Last 30 Days</span>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row items-center justify-around gap-6">
+                                <!-- Conic Donut with Center Hole -->
+                                <div class="relative w-44 h-44 rounded-full donut-chart flex items-center justify-center shadow-inner shrink-0">
+                                    <div class="w-28 h-28 rounded-full bg-white flex flex-col items-center justify-center shadow-sm">
+                                        <span class="text-2xl font-extrabold text-slate-900 tabular-nums">248</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total</span>
+                                    </div>
+                                </div>
+
+                                <!-- Category Legend (Exact Prototype Percentages) -->
+                                <div class="grid grid-cols-2 sm:grid-cols-1 gap-2.5 text-xs w-full max-w-[210px]">
+                                    <div class="flex items-center justify-between"><span class="flex items-center gap-2 font-semibold text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>Electrical</span><b class="text-slate-900">28%</b></div>
+                                    <div class="flex items-center justify-between"><span class="flex items-center gap-2 font-semibold text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>IT / Network</span><b class="text-slate-900">20%</b></div>
+                                    <div class="flex items-center justify-between"><span class="flex items-center gap-2 font-semibold text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Cleaning</span><b class="text-slate-900">19%</b></div>
+                                    <div class="flex items-center justify-between"><span class="flex items-center gap-2 font-semibold text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Plumbing</span><b class="text-slate-900">12%</b></div>
+                                    <div class="flex items-center justify-between"><span class="flex items-center gap-2 font-semibold text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-violet-500"></span>Classroom</span><b class="text-slate-900">10%</b></div>
+                                    <div class="flex items-center justify-between"><span class="flex items-center gap-2 font-semibold text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>Others</span><b class="text-slate-900">11%</b></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tickets by Status & Top Problem Locations (Screen 4 & Screen 11) -->
+                        <div class="lg:col-span-6 dash-card p-6 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-slate-900">Tickets by Status &amp; Top Locations</h3>
+                                    <p class="text-xs text-slate-400">Real-time operational breakdown &amp; high-frequency rooms</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600">Live Analytics</span>
+                            </div>
+
+                            <!-- Visual Bar Chart -->
+                            <div class="grid grid-cols-4 gap-4 items-end h-36 pt-6 px-4 border-b border-slate-100">
+                                <div class="flex flex-col items-center gap-1.5 h-full justify-end">
+                                    <span class="text-xs font-extrabold text-slate-700">65</span>
+                                    <div class="w-full max-w-[42px] h-[55%] rounded-t-xl bg-gradient-to-t from-rose-500 to-rose-400"></div>
+                                    <span class="text-[11px] font-bold text-slate-500 pb-2">Open</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1.5 h-full justify-end">
+                                    <span class="text-xs font-extrabold text-slate-700">112</span>
+                                    <div class="w-full max-w-[42px] h-[92%] rounded-t-xl bg-gradient-to-t from-indigo-600 to-sky-400"></div>
+                                    <span class="text-[11px] font-bold text-slate-500 pb-2">In Progress</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1.5 h-full justify-end">
+                                    <span class="text-xs font-extrabold text-slate-700">71</span>
+                                    <div class="w-full max-w-[42px] h-[64%] rounded-t-xl bg-gradient-to-t from-emerald-500 to-teal-400"></div>
+                                    <span class="text-[11px] font-bold text-slate-500 pb-2">Resolved</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1.5 h-full justify-end">
+                                    <span class="text-xs font-extrabold text-slate-700">48</span>
+                                    <div class="w-full max-w-[42px] h-[44%] rounded-t-xl bg-gradient-to-t from-slate-500 to-slate-400"></div>
+                                    <span class="text-[11px] font-bold text-slate-500 pb-2">Closed</span>
+                                </div>
+                            </div>
+
+                            <!-- Top Problem Locations (Screen 11) -->
+                            <div class="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="text-slate-400 font-bold block text-[10px]">#1 Hotspot</span>
+                                    <b class="text-slate-800">Room 304 (28)</b>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="text-slate-400 font-bold block text-[10px]">#2 Hotspot</span>
+                                    <b class="text-slate-800">Room 402 (22)</b>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="text-slate-400 font-bold block text-[10px]">#3 Hotspot</span>
+                                    <b class="text-slate-800">Library (18)</b>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span class="text-slate-400 font-bold block text-[10px]">#4 Hotspot</span>
+                                    <b class="text-slate-800">Lab 2 (15)</b>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recurring Problem Detection & Campus Buildings/Rooms Management (Screen 10 & Screen 11) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        
+                        <!-- Left 5 Cols: Recurring Problems Detection (Requirement 5.11 & Screen 11) -->
+                        <div class="lg:col-span-5 dash-card p-6 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 block">Pattern Intelligence · Req 5.11</span>
+                                    <h3 class="text-base font-extrabold text-slate-900">Recurring Problems Detected</h3>
+                                </div>
+                                <span class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-repeat"></i></span>
+                            </div>
+                            <p class="text-xs text-slate-500">Identifies equipment &amp; rooms needing permanent replacement instead of temporary repair.</p>
+
+                            <!-- Highlighted Spec Example: Room 402 Projector -->
+                            <div class="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/80 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-rose-900"><i class="fa-solid fa-triangle-exclamation text-rose-600 mr-1.5"></i>Room 402 — Projector P-102</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white">14x Total</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                    <div class="bg-white rounded-xl py-1.5 border border-rose-100"><span class="text-[10px] text-slate-400 block">July</span><b class="text-slate-800">3 times</b></div>
+                                    <div class="bg-white rounded-xl py-1.5 border border-rose-100"><span class="text-[10px] text-slate-400 block">August</span><b class="text-amber-600">5 times</b></div>
+                                    <div class="bg-white rounded-xl py-1.5 border border-rose-200"><span class="text-[10px] text-slate-400 block">September</span><b class="text-rose-600">6 times</b></div>
+                                </div>
+                                <p class="text-[11px] font-semibold text-rose-800">Recommendation: Replace Projector P-102 permanently.</p>
+                            </div>
+
+                            <!-- Other Recurring Items from Screen 11 -->
+                            <div class="space-y-2 text-xs">
+                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                    <span class="font-bold text-slate-700"><i class="fa-solid fa-snowflake text-amber-500 mr-2"></i>Room 304 — AC Problem</span>
+                                    <span class="font-extrabold text-amber-600">5 times</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                    <span class="font-bold text-slate-700"><i class="fa-solid fa-computer text-indigo-500 mr-2"></i>Lab 2 — Computer Issue</span>
+                                    <span class="font-extrabold text-indigo-600">4 times</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                    <span class="font-bold text-slate-700"><i class="fa-solid fa-wifi text-sky-500 mr-2"></i>Library — Wi-Fi Issue</span>
+                                    <span class="font-extrabold text-sky-600">4 times</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right 7 Cols: Buildings, Rooms & Assets Management (Prototype Screen 10) -->
+                        <div class="lg:col-span-7 dash-card p-6 space-y-5">
+                            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                                <div>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 block">Campus Hierarchy · Req 5.15</span>
+                                    <h3 class="text-base font-extrabold text-slate-900">Buildings, Rooms &amp; Equipment Management</h3>
+                                </div>
+                                <button onclick="addNewRoomPrompt()" class="btn-primary px-4 py-2 rounded-xl text-white text-xs font-extrabold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-plus"></i><span>Add Building / Room</span>
+                                </button>
+                            </div>
+
+                            <!-- Hierarchy Tree (Matches Prototype Screen 10) -->
+                            <div class="space-y-3 text-xs">
+                                <!-- Academic Building A -->
+                                <div class="rounded-2xl border border-slate-200 overflow-hidden">
+                                    <div class="px-4 py-3 bg-slate-50 flex items-center justify-between font-extrabold text-slate-900">
+                                        <span class="flex items-center gap-2"><i class="fa-solid fa-building text-indigo-600"></i> Academic Building A</span>
+                                        <span class="text-[11px] font-bold text-indigo-600">4 Floors · 18 Rooms</span>
+                                    </div>
+                                    <div class="p-4 space-y-2.5 bg-white">
+                                        <div class="flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50">
+                                            <span class="font-bold text-slate-600"><i class="fa-solid fa-layer-group text-slate-400 mr-2"></i>Floor 1 &amp; Floor 2</span>
+                                            <span class="text-indigo-600 font-bold cursor-pointer" onclick="addNewRoomPrompt()">+ Add Room</span>
+                                        </div>
+                                        <!-- Floor 3 Expanded -->
+                                        <div class="rounded-xl border border-indigo-100 bg-indigo-50/30 p-3 space-y-2">
+                                            <div class="flex items-center justify-between font-extrabold text-indigo-950">
+                                                <span><i class="fa-solid fa-folder-open text-indigo-600 mr-2"></i>Floor 3 (Expanded)</span>
+                                                <button onclick="addNewRoomPrompt()" class="text-indigo-600 hover:underline">+ Add Room</button>
+                                            </div>
+                                            <div id="adminFloor3Rooms" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-4 pt-1">
+                                                <div class="p-2.5 rounded-lg bg-white border border-slate-200/80 flex items-center justify-between">
+                                                    <span><b>Room 301</b> · Lecture Hall</span>
+                                                    <span class="text-slate-400"><i class="fa-solid fa-pen mr-2"></i><i class="fa-solid fa-trash text-rose-400"></i></span>
+                                                </div>
+                                                <div class="p-2.5 rounded-lg bg-white border border-slate-200/80 flex items-center justify-between">
+                                                    <span><b>Room 302</b> · Seminar</span>
+                                                    <span class="text-slate-400"><i class="fa-solid fa-pen mr-2"></i><i class="fa-solid fa-trash text-rose-400"></i></span>
+                                                </div>
+                                                <div class="p-2.5 rounded-lg bg-white border border-slate-200/80 flex items-center justify-between">
+                                                    <span><b>Room 304</b> · Multimedia</span>
+                                                    <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold text-[10px]">AC-304</span>
+                                                </div>
+                                                <div class="p-2.5 rounded-lg bg-white border border-rose-200 flex items-center justify-between">
+                                                    <span><b>Floor 4 · Room 402</b></span>
+                                                    <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-600 font-bold text-[10px]">Projector P-102 (14x)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Academic Building B & Science Building -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 flex items-center justify-between font-bold text-slate-800">
+                                        <span><i class="fa-solid fa-building text-indigo-500 mr-2"></i>Academic Building B</span>
+                                        <span class="text-slate-400 text-[11px]">12 Rooms</span>
+                                    </div>
+                                    <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 flex items-center justify-between font-bold text-slate-800">
+                                        <span><i class="fa-solid fa-flask text-cyan-600 mr-2"></i>Science Building (Labs)</span>
+                                        <span class="text-slate-400 text-[11px]">8 Labs</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Master Ticket Table (Prototype Screen 4 Bottom Table) -->
+                    <div class="dash-card overflow-hidden">
+                        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-base font-extrabold text-slate-900">System-Wide Recent Tickets</h3>
+                                <p class="text-xs text-slate-400">Complete master table across all buildings, roles, and departments</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700">Admin Full Access</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50/80 text-slate-400 uppercase tracking-wider font-extrabold border-b border-slate-100">
+                                        <th class="py-3.5 px-6">Ticket ID</th>
+                                        <th class="py-3.5 px-4">Title &amp; Location</th>
+                                        <th class="py-3.5 px-4">Category</th>
+                                        <th class="py-3.5 px-4">Priority</th>
+                                        <th class="py-3.5 px-4">Status</th>
+                                        <th class="py-3.5 px-4">Assigned To</th>
+                                        <th class="py-3.5 px-6 text-right">SLA Timer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTicketsTableBody" class="divide-y divide-slate-100 font-medium">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- ===================== LIVE CHAT & AUDIT TRAIL MODAL ===================== -->
+    <div id="chatModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl border border-slate-200 max-w-xl w-full overflow-hidden shadow-2xl animate-view">
+            <div class="px-6 py-4 bg-ink text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center text-sm"><i class="fa-solid fa-comments"></i></span>
+                    <div>
+                        <h3 id="modalTicketTitle" class="text-sm font-extrabold">Ticket #CF-1025 · Live Channel</h3>
+                        <p id="modalTicketSub" class="text-[11px] text-slate-300">Room 304 • Assigned to Staff A (ICT Dept)</p>
+                    </div>
+                </div>
+                <button onclick="closeChatModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="modalChatHistory" class="p-5 h-72 overflow-y-auto space-y-3 bg-slate-50 text-xs">
+                <!-- Populated dynamically -->
+            </div>
+
+            <form onsubmit="sendModalMessage(event)" class="p-4 bg-white border-t border-slate-200 flex items-center gap-2">
+                <input id="modalChatInput" type="text" placeholder="Write a message or update..." class="flex-1 bg-slate-100 rounded-full px-4 py-2.5 text-xs font-medium outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">
+                <button type="submit" class="btn-primary px-5 py-2.5 rounded-full text-white text-xs font-extrabold">
+                    Send <i class="fa-solid fa-paper-plane ml-1"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================== TOAST NOTIFICATION ===================== -->
+    <div id="toastBox" class="fixed bottom-5 right-5 z-50 hidden items-center gap-3 px-5 py-3.5 rounded-2xl bg-ink text-white text-xs font-bold shadow-2xl border border-white/15">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toastText">Action completed!</span>
+    </div>
+
+    <!-- ===================== JAVASCRIPT LOGIC ===================== -->
+    <script>
+        // Master Tickets Dataset (Aligned with Prototype Screens 3, 4, 8, 9)
+        const tickets = [
+            {
+                id: 'CF-1025',
+                title: 'Projector not working',
+                location: 'Room 304 • Academic Building A',
+                category: 'Classroom / ICT',
+                priority: 'High',
+                status: 'In Progress',
+                staff: 'Staff A (Masud)',
+                dept: 'ICT Department',
+                sla: '02h 18m left',
+                timeAgo: '2 hours ago',
+                thumb: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=200&q=80',
+                chats: [
+                    { sender: 'Reporter', text: 'The projector is not turning on. It shows a red light.', time: '10:15 AM' },
+                    { sender: 'Staff A', text: 'We are checking it. Replacing the power cable now.', time: '10:25 AM' }
+                ]
+            },
+            {
+                id: 'CF-1024',
+                title: 'AC not working',
+                location: 'Room 402 • Academic Building A',
+                category: 'Electrical',
+                priority: 'Medium',
+                status: 'Open',
+                staff: 'Staff B (Tanvir)',
+                dept: 'Electrical',
+                sla: '06h 40m left',
+                timeAgo: '1 day ago',
+                thumb: 'https://images.unsplash.com/photo-1631545806609-35d4ae490431?auto=format&fit=crop&w=200&q=80',
+                chats: [
+                    { sender: 'Reporter', text: 'AC in Room 402 is blowing warm air.', time: '02:15 PM' }
+                ]
+            },
+            {
+                id: 'CF-1023',
+                title: 'Wi-Fi issue',
+                location: 'Library • Main Building',
+                category: 'IT / Network',
+                priority: 'High',
+                status: 'Resolved',
+                staff: 'Staff C (Kamal)',
+                dept: 'ICT Department',
+                sla: 'Resolved in 2h 15m',
+                timeAgo: '3 days ago',
+                thumb: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=200&q=80',
+                chats: [
+                    { sender: 'Staff C', text: 'Router firmware updated and PoE switch replaced. Please verify!', time: '01:25 PM' }
+                ]
+            },
+            {
+                id: 'CF-1022',
+                title: 'Water leakage',
+                location: 'Lab 2 • Science Building',
+                category: 'Plumbing',
+                priority: 'Critical',
+                status: 'Open',
+                staff: 'Staff D (Rubel)',
+                dept: 'Plumbing',
+                sla: '00h 45m left (Urgent)',
+                timeAgo: '1 week ago',
+                thumb: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=200&q=80',
+                chats: [
+                    { sender: 'Reporter', text: 'Main pipe leaking near Lab 2 sink.', time: '08:30 AM' }
+                ]
+            },
+            {
+                id: 'CF-1021',
+                title: 'Broken chair',
+                location: 'Room 201 • Academic Building B',
+                category: 'Furniture',
+                priority: 'Low',
+                status: 'Closed',
+                staff: 'Staff C (Kamal)',
+                dept: 'Maintenance',
+                sla: 'Verified & Closed',
+                timeAgo: '5 days ago',
+                thumb: 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?auto=format&fit=crop&w=200&q=80',
+                chats: [
+                    { sender: 'Reporter', text: 'Verified! Chairs have been replaced.', time: '04:45 PM' }
+                ]
+            }
+        ];
+
+        // Role Configurations (RBAC Metadata & Navigation)
+        const roleConfigs = {
+            student: {
+                tag: 'Student',
+                scope: 'Student → Own Tickets Only',
+                userName: 'John Doe',
+                userRole: 'Student · CSE',
+                avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4F46E5&color=fff&bold=true',
+                permChip: 'RBAC: Own Reported Tickets',
+                deptChip: 'Student ID: #2024-CSE-109',
+                heading: 'Welcome Back, John Doe 👋',
+                subtext: "Here's an overview of your reported problems, live technician chats, and pending verifications.",
+                ctaHTML: `<button onclick="openToast('Opening Report a Problem Form...')" class="btn-primary text-white text-xs font-extrabold px-5 py-3 rounded-xl flex items-center gap-2"><i class="fa-solid fa-plus"></i><span>Report a New Problem</span></button>`,
+                nav: [
+                    { icon: 'fa-house', label: 'Dashboard', active: true },
+                    { icon: 'fa-triangle-exclamation', label: 'Report Problem' },
+                    { icon: 'fa-ticket', label: 'My Tickets', badge: '5' },
+                    { icon: 'fa-bell', label: 'Notifications', dot: true },
+                    { icon: 'fa-user', label: 'Profile' }
+                ]
+            },
+            staff: {
+                tag: 'Staff',
+                scope: 'Staff → Assigned Tickets Only',
+                userName: 'Masud Rana (Staff A)',
+                userRole: 'Technician · ICT Dept',
+                avatar: 'https://ui-avatars.com/api/?name=Masud+Rana&background=0284C7&color=fff&bold=true',
+                permChip: 'RBAC: Assigned Maintenance Queue',
+                deptChip: 'ICT & Multimedia Support',
+                heading: 'Staff Workbench · Masud Rana 🛠️',
+                subtext: 'Accept assigned campus problems, chat with reporters, and upload Before/After evidence photos.',
+                ctaHTML: `<button onclick="openChatModal('CF-1025')" class="btn-primary text-white text-xs font-extrabold px-5 py-3 rounded-xl flex items-center gap-2"><i class="fa-solid fa-comments"></i><span>Open Active Ticket Chat</span></button>`,
+                nav: [
+                    { icon: 'fa-gauge-high', label: 'Staff Dashboard', active: true },
+                    { icon: 'fa-list-check', label: 'Assigned Tickets', badge: '4' },
+                    { icon: 'fa-comments', label: 'Reporter Live Chat' },
+                    { icon: 'fa-camera', label: 'Evidence Uploads' },
+                    { icon: 'fa-user', label: 'Profile' }
+                ]
+            },
+            manager: {
+                tag: 'Manager',
+                scope: 'Manager → Department Tickets',
+                userName: 'Engr. Tariq Hasan',
+                userRole: 'Manager · ICT Dept',
+                avatar: 'https://ui-avatars.com/api/?name=Tariq+Hasan&background=7C3AED&color=fff&bold=true',
+                permChip: 'RBAC: All Department Tickets & SLA',
+                deptChip: 'ICT & Electrical Operations',
+                heading: 'Department Operations & Dispatch 👨‍💼',
+                subtext: 'Assign tickets based on staff workload, adjust priorities, and resolve SLA escalations.',
+                ctaHTML: `<button onclick="openToast('SLA Report exported for ICT Department!')" class="btn-primary text-white text-xs font-extrabold px-5 py-3 rounded-xl flex items-center gap-2"><i class="fa-solid fa-bolt"></i><span>Monitor SLA Breaches</span></button>`,
+                nav: [
+                    { icon: 'fa-house', label: 'Dashboard', active: true },
+                    { icon: 'fa-ticket', label: 'Department Tickets', badge: '18' },
+                    { icon: 'fa-user-check', label: 'Assign Tickets' },
+                    { icon: 'fa-users-gear', label: 'Staff Workload' },
+                    { icon: 'fa-chart-pie', label: 'Dept Reports' }
+                ]
+            },
+            admin: {
+                tag: 'Admin',
+                scope: 'Admin → All Tickets & System Config',
+                userName: 'System Administrator',
+                userRole: 'Superuser · CampusFix',
+                avatar: 'https://ui-avatars.com/api/?name=Admin&background=050816&color=fff&bold=true',
+                permChip: 'RBAC: Full System & Analytics Control',
+                deptChip: 'All Buildings · All Departments',
+                heading: 'System Overview & Analytics 📊',
+                subtext: 'Overall campus problem statistics, recurring problem intelligence, and building/asset hierarchy.',
+                ctaHTML: `<button onclick="addNewRoomPrompt()" class="btn-primary text-white text-xs font-extrabold px-5 py-3 rounded-xl flex items-center gap-2"><i class="fa-solid fa-building"></i><span>+ Add Building / Asset</span></button>`,
+                nav: [
+                    { icon: 'fa-chart-line', label: 'System Overview', active: true },
+                    { icon: 'fa-ticket', label: 'All Tickets', badge: '248' },
+                    { icon: 'fa-users', label: 'Users & RBAC Roles' },
+                    { icon: 'fa-sitemap', label: 'Departments & SLA' },
+                    { icon: 'fa-building', label: 'Buildings & Rooms' },
+                    { icon: 'fa-computer', label: 'Assets & Equipment' },
+                    { icon: 'fa-chart-pie', label: 'Reports & Analytics' }
+                ]
+            }
+        };
+
+        let currentRole = 'student';
+        let activeChatTicketId = 'CF-1025';
+        let searchQuery = '';
+
+        const statusBadgeMap = {
+            'Open':        'bg-rose-50 text-rose-600 border-rose-200',
+            'In Progress': 'bg-blue-50 text-blue-600 border-blue-200',
+            'Resolved':    'bg-emerald-50 text-emerald-600 border-emerald-200',
+            'Closed':      'bg-slate-100 text-slate-600 border-slate-200',
+            'Reopened':    'bg-amber-50 text-amber-700 border-amber-200'
+        };
+
+        const prioBadgeMap = {
+            'Low':      'bg-slate-100 text-slate-600',
+            'Medium':   'bg-amber-50 text-amber-700 border border-amber-200',
+            'High':     'bg-rose-50 text-rose-600 border border-rose-200',
+            'Critical': 'bg-red-600 text-white'
+        };
+
+        // Switch Active Role (RBAC)
+        function switchRole(roleKey) {
+            currentRole = roleKey;
+            const cfg = roleConfigs[roleKey];
+
+            // Update Role Switcher Buttons
+            ['student', 'staff', 'manager', 'admin'].forEach(r => {
+                const btn = document.getElementById(`roleBtn-${r}`);
+                const view = document.getElementById(`view-${r}`);
+                if (r === roleKey) {
+                    btn.className = 'role-btn px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 btn-primary text-white shadow-sm';
+                    view.classList.remove('hidden');
+                } else {
+                    btn.className = 'role-btn px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 text-slate-600 hover:bg-white';
+                    view.classList.add('hidden');
+                }
+            });
+
+            // Update Header & Sidebar Info
+            document.getElementById('sidebarRoleTag').textContent = cfg.tag;
+            document.getElementById('rbacScopeText').textContent = cfg.scope;
+            document.getElementById('headerUserName').textContent = cfg.userName;
+            document.getElementById('headerUserRole').textContent = cfg.userRole;
+            document.getElementById('headerUserAvatar').src = cfg.avatar;
+            document.getElementById('rolePermissionChip').innerHTML = `<i class="fa-solid fa-lock-open"></i> ${cfg.permChip}`;
+            document.getElementById('roleDeptChip').innerHTML = `<i class="fa-solid fa-building-columns"></i> ${cfg.deptChip}`;
+            document.getElementById('welcomeHeading').textContent = cfg.heading;
+            document.getElementById('welcomeSubtext').textContent = cfg.subtext;
+            document.getElementById('rolePrimaryActionArea').innerHTML = cfg.ctaHTML;
+
+            // Render Sidebar Links
+            document.getElementById('sidebarNav').innerHTML = cfg.nav.map(item => `
+                <a href="#" onclick="openToast('Navigated to ${item.label}')" class="flex items-center justify-between px-4 py-3 rounded-xl font-bold text-xs transition-all ${
+                    item.active ? 'btn-primary text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                }">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid ${item.icon} w-5 text-center ${item.active ? 'text-white' : 'text-slate-400'}"></i>
+                        <span>${item.label}</span>
+                    </div>
+                    ${item.badge ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${item.active ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'}">${item.badge}</span>` : ''}
+                    ${item.dot ? `<span class="w-2 h-2 rounded-full bg-rose-500"></span>` : ''}
+                </a>
+            `).join('');
+
+            renderAllViews();
+        }
+
+        // Render Dynamic Lists Across All Role Views
+        function renderAllViews() {
+            const q = searchQuery.trim().toLowerCase();
+            const filtered = tickets.filter(t => !q || [t.id, t.title, t.location, t.category, t.staff, t.status].join(' ').toLowerCase().includes(q));
+
+            // 1. Student Recent Tickets List (Screen 3)
+            document.getElementById('studentTicketsList').innerHTML = filtered.map(t => `
+                <div class="p-4 px-6 flex items-center justify-between gap-4 hover:bg-slate-50/90 transition cursor-pointer" onclick="openChatModal('${t.id}')">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <img src="${t.thumb}" class="w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0" alt="${t.title}">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-extrabold text-indigo-600">#${t.id}</span>
+                                <h4 class="text-sm font-extrabold text-slate-900 truncate">${t.title}</h4>
+                            </div>
+                            <p class="text-xs text-slate-500 truncate mt-0.5">${t.location}</p>
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${prioBadgeMap[t.priority]}">${t.priority}</span>
+                                <span class="text-[11px] font-bold text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${t.sla}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1.5 shrink-0">
+                        <span class="px-3 py-1 rounded-full text-[11px] font-extrabold border ${statusBadgeMap[t.status] || statusBadgeMap['Open']}">${t.status}</span>
+                        <span class="text-[11px] font-semibold text-slate-400">${t.timeAgo} <i class="fa-solid fa-chevron-right text-[9px] ml-1 text-indigo-500"></i></span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update Student Counters
+            document.getElementById('stuStatTotal').textContent = tickets.length;
+            document.getElementById('stuStatOpen').textContent = tickets.filter(t => t.status === 'Open' || t.status === 'Reopened').length;
+            document.getElementById('stuStatProgress').textContent = tickets.filter(t => t.status === 'In Progress').length;
+            document.getElementById('stuStatResolved').textContent = tickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+
+            // 2. Staff Assigned Queue
+            document.getElementById('staffTaskQueue').innerHTML = filtered.map(t => `
+                <div class="p-4 px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition">
+                    <div class="flex items-start gap-3.5">
+                        <img src="${t.thumb}" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0" alt="${t.title}">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-extrabold text-indigo-600">#${t.id}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${prioBadgeMap[t.priority]}">${t.priority}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${statusBadgeMap[t.status] || statusBadgeMap['Open']}">${t.status}</span>
+                            </div>
+                            <h4 class="text-sm font-extrabold text-slate-900 mt-1">${t.title}</h4>
+                            <p class="text-xs text-slate-500">${t.location} · <b class="text-amber-600">${t.sla}</b></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openChatModal('${t.id}')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 text-xs font-bold transition">
+                            <i class="fa-regular fa-comments mr-1"></i>Chat
+                        </button>
+                        <button onclick="staffQuickAccept('${t.id}')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition">
+                            Update Status
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 3. Manager Tickets List
+            document.getElementById('managerTicketsList').innerHTML = filtered.map(t => `
+                <div class="p-4 px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-extrabold text-indigo-600">#${t.id}</span>
+                            <h4 class="text-sm font-extrabold text-slate-900">${t.title}</h4>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${prioBadgeMap[t.priority]}">${t.priority}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">${t.location} · Assigned: <b class="text-slate-800">${t.staff}</b></p>
+                        <p class="text-[11px] font-bold text-amber-600 mt-1"><i class="fa-solid fa-stopwatch mr-1"></i>SLA: ${t.sla}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="px-3 py-1 rounded-full text-[11px] font-extrabold border ${statusBadgeMap[t.status] || statusBadgeMap['Open']}">${t.status}</span>
+                        <button onclick="selectTicketForManager('${t.id}')" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white text-xs font-extrabold transition">
+                            Select to Reassign
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 4. Admin Master Table (Screen 4)
+            document.getElementById('adminTicketsTableBody').innerHTML = filtered.map(t => `
+                <tr class="hover:bg-slate-50/90 transition cursor-pointer" onclick="openChatModal('${t.id}')">
+                    <td class="py-3.5 px-6 font-extrabold text-indigo-600">#${t.id}</td>
+                    <td class="py-3.5 px-4">
+                        <p class="font-extrabold text-slate-900">${t.title}</p>
+                        <p class="text-[11px] text-slate-400">${t.location}</p>
+                    </td>
+                    <td class="py-3.5 px-4 font-semibold text-slate-600">${t.category}</td>
+                    <td class="py-3.5 px-4"><span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold ${prioBadgeMap[t.priority]}">${t.priority}</span></td>
+                    <td class="py-3.5 px-4"><span class="px-3 py-1 rounded-full text-[11px] font-extrabold border ${statusBadgeMap[t.status] || statusBadgeMap['Open']}">${t.status}</span></td>
+                    <td class="py-3.5 px-4 font-bold text-slate-700">${t.staff}</td>
+                    <td class="py-3.5 px-6 text-right font-bold text-slate-600 tabular-nums">${t.sla}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Interactive Actions
+        function studentVerifyTicket(isVerified) {
+            const t = tickets.find(x => x.id === 'CF-1025');
+            const badge = document.getElementById('stuVerifyBadge');
+            if (isVerified) {
+                t.status = 'Closed';
+                t.sla = 'Verified & Closed';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-600 text-white';
+                badge.textContent = 'Verified & Closed';
+                openToast('Ticket #CF-1025 Verified & Closed! Thank you for your feedback.');
+            } else {
+                t.status = 'Reopened';
+                t.sla = 'SLA Restarted · 4h left';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold bg-rose-600 text-white';
+                badge.textContent = 'Reopened';
+                openToast('Ticket #CF-1025 Reopened! Assigned staff has been notified immediately.');
+            }
+            renderAllViews();
+        }
+
+        function staffSubmitResolution() {
+            const statusVal = document.getElementById('staffStatusSelect').value;
+            const noteVal = document.getElementById('staffResNote').value;
+            const t = tickets.find(x => x.id === 'CF-1025');
+            t.status = statusVal;
+            t.sla = statusVal === 'Resolved' ? 'Awaiting Reporter Verification' : '02h 10m left';
+            t.chats.push({ sender: 'Staff A', text: `Status updated to ${statusVal}: ${noteVal}`, time: 'Just now' });
+            renderAllViews();
+            openToast(`Ticket #CF-1025 marked as ${statusVal} & sent to student for verification!`);
+        }
+
+        function staffQuickAccept(id) {
+            const t = tickets.find(x => x.id === id);
+            if (!t) return;
+            t.status = t.status === 'Open' ? 'In Progress' : 'Resolved';
+            renderAllViews();
+            openToast(`Ticket #${id} status updated to "${t.status}"!`);
+        }
+
+        function selectTicketForManager(id) {
+            const t = tickets.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('mgrSelectedTicketId').textContent = `#${t.id}`;
+            document.getElementById('mgrSelectedTicketTitle').textContent = t.title;
+            document.getElementById('mgrSelectedTicketLoc').textContent = t.location;
+            document.getElementById('mgrSelectedTicketPrio').textContent = `${t.priority} Priority`;
+            openToast(`Loaded Ticket #${t.id} into Manager Assignment Box.`);
+        }
+
+        function managerAssignTicket() {
+            const idText = document.getElementById('mgrSelectedTicketId').textContent.replace('#', '');
+            const staffVal = document.getElementById('mgrStaffSelect').value.split('—')[0].trim();
+            const deptVal = document.getElementById('mgrDeptSelect').value;
+            const t = tickets.find(x => x.id === idText) || tickets[0];
+            t.staff = staffVal;
+            t.dept = deptVal;
+            if (t.status === 'Open') t.status = 'In Progress';
+            renderAllViews();
+            openToast(`Assigned #${t.id} to ${staffVal} (${deptVal}). SLA Timer started!`);
+        }
+
+        function addNewRoomPrompt() {
+            const container = document.getElementById('adminFloor3Rooms');
+            const roomNum = Math.floor(305 + Math.random() * 15);
+            const div = document.createElement('div');
+            div.className = 'p-2.5 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-between animate-view';
+            div.innerHTML = `<span><b>Room ${roomNum}</b> · Smart Lab</span><span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-bold text-[10px]">New Asset</span>`;
+            container.appendChild(div);
+            openToast(`Added Room ${roomNum} under Academic Building A · Floor 3!`);
+        }
+
+        // Live Chat Modal Functions
+        function openChatModal(id) {
+            activeChatTicketId = id;
+            const t = tickets.find(x => x.id === id) || tickets[0];
+            document.getElementById('modalTicketTitle').textContent = `Ticket #${t.id} · ${t.title}`;
+            document.getElementById('modalTicketSub').textContent = `${t.location} • Assigned to ${t.staff}`;
+            renderModalChat();
+            const modal = document.getElementById('chatModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeChatModal() {
+            const modal = document.getElementById('chatModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderModalChat() {
+            const t = tickets.find(x => x.id === activeChatTicketId) || tickets[0];
+            const box = document.getElementById('modalChatHistory');
+            box.innerHTML = t.chats.map(c => {
+                const isMe = c.sender === 'Reporter' && currentRole === 'student';
+                return `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                        <div class="max-w-[80%] px-4 py-2.5 rounded-2xl ${isMe ? 'btn-primary text-white' : 'bg-white border border-slate-200 text-slate-800'}">
+                            <p class="font-extrabold text-[10px] opacity-75 mb-0.5">${c.sender}</p>
+                            <p>${c.text}</p>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 px-1">${c.time}</span>
+                    </div>
+                `;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendModalMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('modalChatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const t = tickets.find(x => x.id === activeChatTicketId) || tickets[0];
+            t.chats.push({
+                sender: roleConfigs[currentRole].userName,
+                text,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            input.value = '';
+            renderModalChat();
+        }
+
+        // Toast Helper
+        let toastTimeout;
+        function openToast(msg) {
+            const box = document.getElementById('toastBox');
+            document.getElementById('toastText').textContent = msg;
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                box.classList.add('hidden');
+                box.classList.remove('flex');
+            }, 3200);
+        }
+
+        // Search Filter Listener
+        document.getElementById('dashSearch').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderAllViews();
+        });
+
+        // Boot Dashboard with Student Role Default
+        switchRole('student');
+    </script>
+</body>
+</html>
